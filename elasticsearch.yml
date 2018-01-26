@@ -1,0 +1,2 @@
+#Elasticsearch configuration file
+cluster.name: zubtsov-es-cluster
