@@ -14,5 +14,8 @@ include 'shared'
 include 'api'
 include 'services:webservice'
 */
-
 rootProject.name = 'elasticsearch-sample'
+
+include 'elasticsearch-env'
+include 'elasticsearch-java'
+include 'elasticsearch-python'
