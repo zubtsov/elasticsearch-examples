@@ -7,5 +7,5 @@ class TestElasticSearchCluster(unittest.TestCase):
     es = Elasticsearch()
 
     def test_health(self):
-        # datetimes will be serialized
-        self.assertEquals(print(self.es.cluster.health()['status']), 'green')
+        print('Testing Elasticsearch cluster state')
+        self.assertEqual('green', self.es.cluster.health()['status'], 'Cluster state isn\'t green!')
