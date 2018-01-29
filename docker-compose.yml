@@ -7,6 +7,8 @@ services:
       - cluster.name=zubtsov-es-cluster
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch"
+      - "discovery.zen.minimum_master_nodes=2"
     ulimits:
       memlock:
         soft: -1
@@ -25,6 +27,7 @@ services:
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - "discovery.zen.ping.unicast.hosts=elasticsearch"
+      - "discovery.zen.minimum_master_nodes=2"
     ulimits:
       memlock:
         soft: -1
