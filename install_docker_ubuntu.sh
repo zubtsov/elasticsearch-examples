@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#remove old docker versions
+#content taken from https://docs.docker.com/install/linux/docker-ce/ubuntu/
 apt-get remove docker docker-engine docker.io
 
 apt-get update
