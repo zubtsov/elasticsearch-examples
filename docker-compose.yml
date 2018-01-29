@@ -1,4 +1,4 @@
-version: '2.2'
+version: '3.4'
 services:
   elasticsearch:
     image: elasticsearch-zubtsov:latest
@@ -19,12 +19,12 @@ services:
       - esnet
   elasticsearch2:
     image: elasticsearch-zubtsov:latest
-    container_name: zubtsov-es1
+    container_name: zubtsov-es2
     environment:
       - cluster.name=zubtsov-es-cluster
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-#      - "discovery.zen.ping.unicast.hosts=elasticsearch"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch"
     ulimits:
       memlock:
         soft: -1
