@@ -37,6 +37,11 @@ services:
       - esdata2:/usr/share/elasticsearch/data
     networks:
       - esnet
+  logstash:
+      image: logstash-zubtsov:latest
+      container_name: zubtsov-logstash
+      networks:
+        - esnet
 
 volumes:
   esdata1:
