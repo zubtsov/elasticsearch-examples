@@ -42,7 +42,7 @@ services:
       container_name: zubtsov-logstash
       networks:
         - esnet
-
+      #TODO: add persistent volume for sincedb files
 volumes:
   esdata1:
     driver: local
