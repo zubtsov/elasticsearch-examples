@@ -1,4 +1,5 @@
 version: '3.4'
+#TODO: eliminate duplication of configuration
 services:
   elasticsearch:
     image: elasticsearch-zubtsov:latest
@@ -43,10 +44,25 @@ services:
       networks:
         - esnet
       #TODO: add persistent volume for sincedb files
+  solr: #TODO: fix solr run
+    image: solr-zubtsov
+    ports:
+     - 8983:8983
+    volumes:
+      - solrdata:/opt/solr/server/solr/mycores
+    entrypoint:
+      - docker-entrypoint.sh
+#      - solr-precreate
+#      - mycore
+    networks:
+      - esnet
+
 volumes:
   esdata1:
     driver: local
   esdata2:
+    driver: local
+  solrdata:
     driver: local
 
 networks:

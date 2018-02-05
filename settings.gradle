@@ -20,3 +20,5 @@ include 'elasticsearch-env'
 include 'elasticsearch-java'
 include 'elasticsearch-python'
 include 'elasticsearch-groovy'
+include 'solr-env'
+
