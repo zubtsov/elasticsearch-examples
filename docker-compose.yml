@@ -41,19 +41,18 @@ services:
   logstash:
       image: logstash-zubtsov:latest
       container_name: zubtsov-logstash
+      ports:
+        - 9600:9600
       networks:
         - esnet
       #TODO: add persistent volume for sincedb files
-  solr: #TODO: fix solr run
+  solr:
     image: solr-zubtsov
+    container_name: zubtsov-solr
     ports:
      - 8983:8983
     volumes:
       - solrdata:/opt/solr/server/solr/mycores
-    entrypoint:
-      - docker-entrypoint.sh
-#      - solr-precreate
-#      - mycore
     networks:
       - esnet
 
