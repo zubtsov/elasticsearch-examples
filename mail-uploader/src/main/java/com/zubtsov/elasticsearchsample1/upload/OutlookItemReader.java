@@ -26,7 +26,7 @@ public class OutlookItemReader implements ItemReader<XContentBuilder> {
         Properties props = new Properties();
         props.setProperty("mail.imap.ssl.enable", "true");
         Session mailSession = Session.getInstance(props);
-        //mailSession.setDebug(true);
+        //mailSession.setDebug(true); //to turn on or not to turn on?
         try {
             mailStore = mailSession.getStore(mailServerProtocol);
             mailStore.connect(mailServerHost, user, password);
@@ -39,6 +39,22 @@ public class OutlookItemReader implements ItemReader<XContentBuilder> {
 
     @Override
     public XContentBuilder read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
+
+        Folder[] folders = mailStore.getDefaultFolder().list("*");
+
+        //TODO: save the current folder number and current message number
+        //TODO: or maybe it's possible to read multiple messages into one XContentBuilder?
+        //TODO: or maybe it's reasonable to use other object type to package messages together?
+        for (Folder folder : folders) {
+            folder.open(Folder.READ_ONLY);
+            Message[] messages = folder.getMessages();
+            for (Message message : messages) {
+                //read message
+            }
+            folder.close();
+        }
+
+        //TODO: delete the following
         Folder inbox = mailStore.getFolder("Inbox");
         inbox.open(Folder.READ_ONLY);
         SearchTerm st = new SearchTerm() {
@@ -59,6 +75,7 @@ public class OutlookItemReader implements ItemReader<XContentBuilder> {
                 .field("FromAddress", inbox.search(st)[0].getFrom()[0].toString())
                 .endObject();
         inbox.close();
+
         return builder;
     }
 }
