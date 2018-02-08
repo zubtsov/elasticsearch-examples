@@ -14,6 +14,7 @@ import javax.mail.Store;
 import javax.mail.search.SearchTerm;
 import java.util.Properties;
 
+//TODO: refactor
 public class OutlookItemReader implements ItemReader<XContentBuilder> {
 
     Properties props = new Properties();
@@ -27,7 +28,7 @@ public class OutlookItemReader implements ItemReader<XContentBuilder> {
         Session mailSession = Session.getInstance(props);
         //mailSession.setDebug(true);
         Store mailStore = mailSession.getStore("imap");
-        mailStore.connect("outlook.office365.com", "Ruslan_Zubtsov@epam.com", "Ybxnj yt bcnbyyj, dct ljpdjktyj");
+        mailStore.connect("outlook.office365.com", "Ruslan_Zubtsov@epam.com", "");
         Folder inbox = mailStore.getFolder("Inbox");
         inbox.open(Folder.READ_ONLY);
         SearchTerm st = new SearchTerm() {
