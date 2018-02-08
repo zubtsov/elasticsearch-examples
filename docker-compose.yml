@@ -1,5 +1,6 @@
 version: '3.4'
 #TODO: eliminate duplication of configuration
+#TODO: esure proper start-up ordering (Elasticsearch must run before logstash)
 services:
   elasticsearch:
     image: elasticsearch-zubtsov:latest
@@ -39,22 +40,24 @@ services:
     networks:
       - esnet
   logstash:
-      image: logstash-zubtsov:latest
-      container_name: zubtsov-logstash
-      ports:
-        - 9600:9600
-      networks:
-        - esnet
-      #TODO: add persistent volume for sincedb files
+    image: logstash-zubtsov:latest
+    container_name: zubtsov-logstash
+    ports:
+      - 9600:9600
+    networks:
+      - esnet
+    #TODO: add persistent volume for sincedb files
   solr:
     image: solr-zubtsov
     container_name: zubtsov-solr
     ports:
      - 8983:8983
     volumes:
-      - solrdata:/opt/solr/server/solr/mycores
+      - solrdata:/opt/solr/server/solr
     networks:
       - esnet
+#TODO: create network with subnet
+#        ipv4_address: 192.168.200.1
 
 volumes:
   esdata1:

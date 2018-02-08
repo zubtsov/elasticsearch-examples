@@ -1,0 +1,23 @@
+apply plugin: 'java'
+
+jar {
+    baseName = 'gs-batch-processing'
+    version =  '0.1.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    compile 'com.sun.mail:javax.mail:1.6.0'
+    compile 'org.elasticsearch.client:transport:6.1.2'
+    compile 'org.apache.logging.log4j:log4j-core:2.9.1'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.4'
+    compile 'org.springframework.batch:spring-batch-core:4.0.0.RELEASE'
+    compile 'org.hsqldb:hsqldb'
+    testCompile 'junit:junit:4.12'
+}
