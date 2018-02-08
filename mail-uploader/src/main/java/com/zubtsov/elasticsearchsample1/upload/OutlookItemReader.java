@@ -6,29 +6,39 @@ import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.NonTransientResourceException;
 import org.springframework.batch.item.ParseException;
 import org.springframework.batch.item.UnexpectedInputException;
+import org.springframework.beans.factory.annotation.Value;
 
-import javax.mail.Folder;
-import javax.mail.Message;
-import javax.mail.Session;
-import javax.mail.Store;
+import javax.mail.*;
 import javax.mail.search.SearchTerm;
 import java.util.Properties;
 
 //TODO: refactor
 public class OutlookItemReader implements ItemReader<XContentBuilder> {
 
-    Properties props = new Properties();
+    private @Value("${mail.server.host}") String mailServerHost;
+    private @Value("${mail.server.protocol}") String mailServerProtocol;
+    private @Value("${mail.user}") String user;
+    private @Value("${mail.password}") String password;
+
+    private Store mailStore;
 
     public OutlookItemReader() {
+        Properties props = new Properties();
         props.setProperty("mail.imap.ssl.enable", "true");
+        Session mailSession = Session.getInstance(props);
+        //mailSession.setDebug(true);
+        try {
+            mailStore = mailSession.getStore(mailServerProtocol);
+            mailStore.connect(mailServerHost, user, password);
+        } catch (NoSuchProviderException e) {
+            //TODO: handle exception
+        } catch (MessagingException e) {
+            //TODO: handle exception
+        }
     }
 
     @Override
     public XContentBuilder read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
-        Session mailSession = Session.getInstance(props);
-        //mailSession.setDebug(true);
-        Store mailStore = mailSession.getStore("imap");
-        mailStore.connect("outlook.office365.com", "Ruslan_Zubtsov@epam.com", "");
         Folder inbox = mailStore.getFolder("Inbox");
         inbox.open(Folder.READ_ONLY);
         SearchTerm st = new SearchTerm() {

@@ -15,25 +15,29 @@ public class TestEmail {
         Properties props = new Properties();
         props.setProperty("mail.imap.ssl.enable", "true");
         Session mailSession = Session.getInstance(props);
-        //mailSession.setDebug(true);
+        mailSession.setDebug(true);
         Store mailStore = mailSession.getStore("imap");
-        mailStore.connect("outlook.office365.com", "Ruslan_Zubtsov@epam.com", "");
+        mailStore.connect("outlook.office365.com", "Ruslan_Zubtsov@epam.com", "Ybxnj yt bcnbyyj, dct ljpdjktyj cerf");
         Folder inbox = mailStore.getFolder("Inbox");
+        Folder autoKB = inbox.getFolder("Auto KB");
         inbox.open(Folder.READ_ONLY);
-        SearchTerm st = new SearchTerm() {
-            @Override
-            public boolean match(Message msg) {
-                try {
-                    if ("Full text search training plan".equals(msg.getSubject())) {
-                        return true;
-                    }
-                } catch (Exception e) {
-                    System.out.println(e);
-                }
-                return false;
-            }
-        };
-        System.out.println((String)inbox.search(st)[0].getContent());
+        autoKB.open(Folder.READ_ONLY);
+        System.out.println(mailStore.getDefaultFolder().list("*"));
+
+//        SearchTerm st = new SearchTerm() {
+//            @Override
+//            public boolean match(Message msg) {
+//                try {
+//                    if ("Full text search training plan".equals(msg.getSubject())) {
+//                        return true;
+//                    }
+//                } catch (Exception e) {
+//                    System.out.println(e);
+//                }
+//                return false;
+//            }
+//        };
+//        System.out.println((String)inbox.search(st)[0].getContent());
         //System.out.println((String)inbox.getMessages()[0].getContent());
         inbox.close();
     }
