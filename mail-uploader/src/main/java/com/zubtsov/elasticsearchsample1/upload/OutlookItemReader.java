@@ -6,9 +6,12 @@ import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.mail.*;
+import java.io.IOException;
 import java.util.Properties;
 import java.util.TreeMap;
 
+//TODO: store state between runnings & get messages reveived later than last run
+//TODO: ADD COMMON THREAD-SAFE ATOMIC COUNTER + TASK EXECUTOR
 //TODO: refactor
 //TODO: research possibility of parallel execution (e.g. one Thread per Folder)
 //TODO: implement as Producer-Consumer using stack/queue?
@@ -20,6 +23,8 @@ public class OutlookItemReader implements ItemReader<XContentBuilder>, ItemStrea
     private String currentFolderName;
     private int currentMessageIndex = 0;
 
+    private @Value("${mail.folder.name.pattern}")
+    String folderNamePattern;
     private @Value("${mail.server.host}")
     String mailServerHost;
     private @Value("${mail.server.protocol}")
@@ -39,12 +44,12 @@ public class OutlookItemReader implements ItemReader<XContentBuilder>, ItemStrea
             Properties props = new Properties();
             props.setProperty("mail.imap.ssl.enable", "true");
             Session mailSession = Session.getInstance(props);
-            mailSession.setDebug(true); //to turn on or not to turn on?
+//            mailSession.setDebug(true); //to turn on or not to turn on?
             mailStore = mailSession.getStore(mailServerProtocol);
             mailStore.connect(mailServerHost, user, password);
 
-            for (Folder folder : mailStore.getDefaultFolder().list("*")) {
-                if (folder.getMessageCount() != 0 && "INBOX".equals(folder.getName())) { //TODO: use regular expression & refactor
+            for (Folder folder : mailStore.getDefaultFolder().list(folderNamePattern)) {
+                if (folder.getMessageCount() != 0) { //TODO: use regular expression & refactor
                     folder.open(Folder.READ_ONLY);
                     foldersMessages.put(folder.getFullName(), folder.getMessages());
                     folder.close();
@@ -96,19 +101,35 @@ public class OutlookItemReader implements ItemReader<XContentBuilder>, ItemStrea
         }
 
         Message message = foldersMessages.get(currentFolderName)[currentMessageIndex];
-
         message.getFolder().open(Folder.READ_ONLY);
+        XContentBuilder builder = messageToXContentBuilder(message);
+        message.getFolder().close();
 
+        advanceToNextMessage();
+
+        return builder;
+    }
+
+    private XContentBuilder messageToXContentBuilder(Message message) throws MessagingException, IOException {
         XContentBuilder builder = XContentFactory.jsonBuilder()
                 .startObject()
+                .field("Folder", message.getFolder().getName())
                 .field("From", message.getFrom())
                 .field("Subject", message.getSubject())
                 .field("Sent date", message.getSentDate())
-                .field("Received Date", message.getReceivedDate());
+                .field("Received Date", message.getReceivedDate())
+                .field("Recipients", message.getAllRecipients())
+                .field("Reply to", message.getReplyTo());
+        Object content = message.getContent();
+        builder.field("Message Content", messageContentToString(content));
+        builder.endObject();
+        return builder;
+    }
 
+    private String messageContentToString(Object content) throws MessagingException, IOException {
         //TODO: handle other types of content (not text/plain=String)
         StringBuilder messageContentBuilder = new StringBuilder();
-        Object content = message.getContent();
+
         if (content instanceof String) {
             messageContentBuilder.append((String)content);
         } else if (content instanceof Multipart) {
@@ -121,14 +142,7 @@ public class OutlookItemReader implements ItemReader<XContentBuilder>, ItemStrea
                 }
             }
         }
-        builder.field("Message Content", messageContentBuilder.toString());
-        builder.endObject();
-
-        message.getFolder().close();
-
-        advanceToNextMessage();
-
-        return builder;
+        return messageContentBuilder.toString();
     }
 
     private void advanceToNextMessage() {

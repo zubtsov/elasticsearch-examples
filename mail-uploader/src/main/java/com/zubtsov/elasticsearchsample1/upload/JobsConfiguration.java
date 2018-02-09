@@ -47,7 +47,7 @@ public class JobsConfiguration {
     @Qualifier("Upload e-mails to Elasticsearch step")
     public Step retrieveAndStoreEmails(ItemReader<XContentBuilder> outlookItemReader, ItemWriter<XContentBuilder> elasticsearchItemWriter) {
         return stepBuilderFactory.get("Retrieve e-mail via IMAP and store via Elasticsearch transport client")
-                .<XContentBuilder, XContentBuilder>chunk(1) //TODO: select proper chunk size
+                .<XContentBuilder, XContentBuilder>chunk(25) //TODO: select proper chunk size
                 .reader(outlookItemReader)
                 .writer(elasticsearchItemWriter)
                 .build();

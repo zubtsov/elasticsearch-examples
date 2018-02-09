@@ -24,7 +24,7 @@ public class ElasticsearchItemWriter implements ItemWriter<XContentBuilder>, Ite
     private @Value("${elasticsearch.index.name}") String indexName;
     private @Value("${elasticsearch.type.name}") String typeName;
     private @Value("${elasticsearch.host}") String elasticHost;
-    private @Value("${elasticsearch.port}") int elasticPort; //TODO: inject as int
+    private @Value("${elasticsearch.port}") int elasticPort;
 
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
@@ -41,7 +41,6 @@ public class ElasticsearchItemWriter implements ItemWriter<XContentBuilder>, Ite
 
     }
 
-    //TODO: instead of using XContentBuilder use list of Messages
     @Override
     public void write(List<? extends XContentBuilder> items) throws Exception {
         TransportClient client;
