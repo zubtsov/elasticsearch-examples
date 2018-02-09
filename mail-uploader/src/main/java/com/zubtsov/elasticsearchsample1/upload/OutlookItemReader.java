@@ -11,6 +11,7 @@ import java.util.TreeMap;
 
 //TODO: refactor
 //TODO: research possibility of parallel execution (e.g. one Thread per Folder)
+//TODO: implement as Producer-Consumer using stack/queue?
 public class OutlookItemReader implements ItemReader<XContentBuilder>, ItemStream {
 
     private static final String CURRENT_INDEX = "current.index";
