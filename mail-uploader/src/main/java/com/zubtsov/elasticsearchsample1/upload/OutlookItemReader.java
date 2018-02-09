@@ -104,8 +104,24 @@ public class OutlookItemReader implements ItemReader<XContentBuilder>, ItemStrea
                 .field("From", message.getFrom())
                 .field("Subject", message.getSubject())
                 .field("Sent date", message.getSentDate())
-                .field("Received Date", message.getReceivedDate())
-                .endObject();
+                .field("Received Date", message.getReceivedDate());
+
+        StringBuilder messageContentBuilder = new StringBuilder();
+        Object content = message.getContent();
+        if (content instanceof String) {
+            messageContentBuilder.append((String)content);
+        } else if (content instanceof Multipart) {
+            Multipart multipart = (Multipart) content;
+            for (int i = 0; i< multipart.getCount(); i++) {
+                BodyPart bodyPart = multipart.getBodyPart(i);
+                Object bodyContent = bodyPart.getContent();
+                if (bodyContent instanceof String) {
+                    messageContentBuilder.append((String) bodyContent);
+                }
+            }
+        }
+        builder.field("Message Content", messageContentBuilder.toString());
+        builder.endObject();
 
         message.getFolder().close();
 
