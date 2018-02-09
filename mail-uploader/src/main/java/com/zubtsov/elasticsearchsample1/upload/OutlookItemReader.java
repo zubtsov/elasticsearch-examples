@@ -42,7 +42,7 @@ public class OutlookItemReader implements ItemReader<XContentBuilder>, ItemStrea
             mailStore.connect(mailServerHost, user, password);
 
             for (Folder folder : mailStore.getDefaultFolder().list("*")) {
-                if (folder.getMessageCount() != 0 && "INBOX".equals(folder.getName())) { //TODO: fix it
+                if (folder.getMessageCount() != 0 && "INBOX".equals(folder.getName())) { //TODO: use regular expression & refactor
                     folder.open(Folder.READ_ONLY);
                     foldersMessages.put(folder.getFullName(), folder.getMessages());
                     folder.close();
@@ -89,8 +89,6 @@ public class OutlookItemReader implements ItemReader<XContentBuilder>, ItemStrea
         //TODO: save the current folder number and current message number
         //TODO: or maybe it's possible to read multiple messages into one XContentBuilder?
         //TODO: or maybe it's reasonable to use other object type to package messages together?
-        //TODO: delete the following
-
         if (currentFolderName == null) {
             return null;
         }
@@ -106,6 +104,7 @@ public class OutlookItemReader implements ItemReader<XContentBuilder>, ItemStrea
                 .field("Sent date", message.getSentDate())
                 .field("Received Date", message.getReceivedDate());
 
+        //TODO: handle other types of content (not text/plain=String)
         StringBuilder messageContentBuilder = new StringBuilder();
         Object content = message.getContent();
         if (content instanceof String) {
