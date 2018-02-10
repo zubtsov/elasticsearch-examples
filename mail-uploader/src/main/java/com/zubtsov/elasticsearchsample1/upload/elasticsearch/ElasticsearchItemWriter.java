@@ -1,4 +1,4 @@
-package com.zubtsov.elasticsearchsample1.upload;
+package com.zubtsov.elasticsearchsample1.upload.elasticsearch;
 
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;

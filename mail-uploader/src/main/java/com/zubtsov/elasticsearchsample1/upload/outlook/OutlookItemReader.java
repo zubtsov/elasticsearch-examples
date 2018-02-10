@@ -1,12 +1,11 @@
-package com.zubtsov.elasticsearchsample1.upload;
+package com.zubtsov.elasticsearchsample1.upload.outlook;
 
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
 import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.mail.*;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.TreeMap;
 
@@ -15,7 +14,7 @@ import java.util.TreeMap;
 //TODO: refactor
 //TODO: research possibility of parallel execution (e.g. one Thread per Folder)
 //TODO: implement as Producer-Consumer using stack/queue?
-public class OutlookItemReader implements ItemReader<XContentBuilder>, ItemStream {
+public class OutlookItemReader implements ItemReader<EmailMessage>, ItemStream {
 
     private static final String CURRENT_INDEX = "current.index";
     private static final String CURRENT_FOLDER_NAME = "current.folder.name";
@@ -55,8 +54,6 @@ public class OutlookItemReader implements ItemReader<XContentBuilder>, ItemStrea
                     folder.close();
                 }
             }
-
-            System.out.println("Done");
         } catch (MessagingException e) {
             //TODO: handle exception
             e.printStackTrace();
@@ -92,7 +89,7 @@ public class OutlookItemReader implements ItemReader<XContentBuilder>, ItemStrea
     }
 
     @Override
-    public XContentBuilder read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
+    public EmailMessage read() throws Exception, UnexpectedInputException, ParseException, NonTransientResourceException {
         //TODO: save the current folder number and current message number
         //TODO: or maybe it's possible to read multiple messages into one XContentBuilder?
         //TODO: or maybe it's reasonable to use other object type to package messages together?
@@ -102,28 +99,27 @@ public class OutlookItemReader implements ItemReader<XContentBuilder>, ItemStrea
 
         Message message = foldersMessages.get(currentFolderName)[currentMessageIndex];
         message.getFolder().open(Folder.READ_ONLY);
-        XContentBuilder builder = messageToXContentBuilder(message);
+        EmailMessage emailMessage = messageToEmailMessage(message);
         message.getFolder().close();
 
         advanceToNextMessage();
 
-        return builder;
+        return emailMessage;
     }
 
-    private XContentBuilder messageToXContentBuilder(Message message) throws MessagingException, IOException {
-        XContentBuilder builder = XContentFactory.jsonBuilder()
-                .startObject()
-                .field("Folder", message.getFolder().getName())
-                .field("From", message.getFrom())
-                .field("Subject", message.getSubject())
-                .field("Sent date", message.getSentDate())
-                .field("Received Date", message.getReceivedDate())
-                .field("Recipients", message.getAllRecipients())
-                .field("Reply to", message.getReplyTo());
+    private EmailMessage messageToEmailMessage(Message message) throws MessagingException, IOException {
         Object content = message.getContent();
-        builder.field("Message Content", messageContentToString(content));
-        builder.endObject();
-        return builder;
+
+        EmailMessage emailMessage = new EmailMessage();
+        emailMessage.setFolder(message.getFolder().getName());
+        emailMessage.setFrom(Arrays.stream(message.getFrom()).map(Address::toString).toArray(String[]::new));
+        emailMessage.setSubject(message.getSubject());
+        emailMessage.setSentDate(message.getSentDate());
+        emailMessage.setReceivedDate(message.getReceivedDate());
+        emailMessage.setRecipients(Arrays.stream(message.getAllRecipients()).map(Address::toString).toArray(String[]::new));
+        emailMessage.setReplyTo(Arrays.stream(message.getReplyTo()).map(Address::toString).toArray(String[]::new));
+        emailMessage.setContent(messageContentToString(content));
+        return emailMessage;
     }
 
     private String messageContentToString(Object content) throws MessagingException, IOException {

@@ -25,15 +25,20 @@ public class UploaderConfiguration {
     private Job uploadEmailsToElasticsearch;
 
     @Autowired
+    @Qualifier("Upload e-mails to Solr job")
+    private Job uploadEmailsToSolr;
+
+    @Autowired
     private JobLauncher jobLauncher;
 
     @Autowired
     private PlatformTransactionManager transactionManager;
 
     //TODO: replace to cron expression & handle exceptions
-    @Scheduled(fixedDelay = 300000)
+    @Scheduled(fixedDelay = 3600000)
     public void uploadEmails() throws Exception {
         System.out.println("Uploading e-mails...");
         jobLauncher.run(uploadEmailsToElasticsearch, new JobParameters()); //TODO: refactor
+//        jobLauncher.run(uploadEmailsToSolr, new JobParameters()); //TODO: refactor
     }
 }
