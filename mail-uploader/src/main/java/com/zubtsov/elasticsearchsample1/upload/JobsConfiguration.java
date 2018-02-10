@@ -9,7 +9,11 @@ import com.zubtsov.elasticsearchsample1.upload.solr.SolrItemWriter;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.common.SolrInputDocument;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -24,6 +28,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 @Configuration
 @EnableBatchProcessing
@@ -116,5 +123,14 @@ public class JobsConfiguration {
                 .withConnectionTimeout(10000)
                 .withSocketTimeout(60000)
                 .build();
+    }
+
+    @Bean
+    public TransportClient elasticTransportClient(@Value("${elasticsearch.cluster.name}") String clusterName,
+                                                  @Value("${elasticsearch.host}") String elasticHost,
+                                                  @Value("${elasticsearch.port}") int elasticPort) throws UnknownHostException {
+        TransportClient client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", clusterName).build());
+        client.addTransportAddress(new TransportAddress(InetAddress.getByName(elasticHost), elasticPort));
+        return client;
     }
 }
