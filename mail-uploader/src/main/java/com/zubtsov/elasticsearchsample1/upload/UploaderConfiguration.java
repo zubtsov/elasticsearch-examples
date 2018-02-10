@@ -16,7 +16,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 @EnableBatchProcessing
 @EnableScheduling
 @Configuration
-@PropertySource("classpath:application.properties")
+@PropertySource("classpath:application.properties") //TODO: fix Intellij IDEA running configuration problem
 @Import(JobsConfiguration.class)
 public class UploaderConfiguration {
 
@@ -38,7 +38,7 @@ public class UploaderConfiguration {
     @Scheduled(fixedDelay = 3600000)
     public void uploadEmails() throws Exception {
         System.out.println("Uploading e-mails...");
-        jobLauncher.run(uploadEmailsToElasticsearch, new JobParameters()); //TODO: refactor
-//        jobLauncher.run(uploadEmailsToSolr, new JobParameters()); //TODO: refactor
+        jobLauncher.run(uploadEmailsToElasticsearch, new JobParameters());
+        jobLauncher.run(uploadEmailsToSolr, new JobParameters());
     }
 }
