@@ -2,6 +2,7 @@ version: '3.4'
 #TODO: add dedicated zookeeper nodes
 #TODO: eliminate duplication of configuration
 #TODO: esure proper start-up ordering (Elasticsearch must run before logstash)
+#TODO: check fault tolerance & restartability
 services:
   elasticsearch:
     image: elasticsearch-zubtsov:latest
@@ -55,9 +56,14 @@ services:
     ports:
      - 8983:8983
     volumes:
-      - solrdata:/opt/solr/server/solr/outlook_mail #TODO: how to locate/reside all cores in this folder?
+      - solrdata:/opt/solr/server/solr/mycores #TODO: how to locate/reside all cores in this folder?
     networks:
       - esnet
+    entrypoint:
+      - docker-entrypoint.sh
+      - solr-precreate
+      - outlook_mail
+      - /opt/solr/server/solr/configsets/outlook_mail
 #TODO: create network with subnet and assign static ip addresses to containers
 #        ipv4_address: 192.168.200.1
 

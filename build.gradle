@@ -34,3 +34,5 @@ apply plugin:'base'
 subprojects {
     version = '1.0'
 }
+
+//TODO: build all by means of gradle (docker images etc.)
