@@ -77,12 +77,12 @@ public class JobsConfiguration {
     @Qualifier("Upload e-mails to Solr step")
     public Step retrieveAndStoreEmailsSolr(@Qualifier("Outlook reader") ItemReader<EmailMessage> outlookItemReader,
                                        @Qualifier("Solr processor") ItemProcessor<EmailMessage, SolrInputDocument> processor,
-                                       @Qualifier("Solr writer") ItemWriter<SolrInputDocument> elasticsearchItemWriter) {
+                                       @Qualifier("Solr writer") ItemWriter<SolrInputDocument> solrItemWriter) {
         return stepBuilderFactory.get("Retrieve e-mail via IMAP and store via Elasticsearch transport client")
                 .<EmailMessage, SolrInputDocument>chunk(25) //TODO: select proper chunk size
                 .reader(outlookItemReader)
                 .processor(processor)
-                .writer(elasticsearchItemWriter)
+                .writer(solrItemWriter)
                 .build();
     }
 

@@ -55,7 +55,7 @@ services:
     ports:
      - 8983:8983
     volumes:
-      - solrdata:/opt/solr/server/solr/mycores #TODO: how to locate/reside all cores in this folder?
+      - solrdata:/opt/solr/server/solr/outlook_mail #TODO: how to locate/reside all cores in this folder?
     networks:
       - esnet
 #TODO: create network with subnet and assign static ip addresses to containers

@@ -16,7 +16,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 @EnableBatchProcessing
 @EnableScheduling
 @Configuration
-@PropertySource("classpath:application.properties") //TODO: fix Intellij IDEA running configuration problem
+//TODO: change to the relative path
+@PropertySource("file:D:\\Git\\elasticsearch-sample\\mail-uploader\\src\\main\\resources\\application.properties") //TODO: fix Intellij IDEA running configuration problem
 @Import(JobsConfiguration.class)
 public class UploaderConfiguration {
 

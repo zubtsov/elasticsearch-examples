@@ -1,0 +1,81 @@
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "html_analyzer": {
+          "tokenizer": "standard",
+          "char_filter": [
+            "html_char_filter"
+          ],
+          "filter": ["lowercase"]
+        }
+      },
+      "char_filter": {
+        "html_char_filter": {
+          "type": "html_strip"
+        }
+      }
+    }
+  },
+  "mappings": {
+    "mail": {
+      "properties": {
+        "Folder": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "From": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "Message Content": {
+          "type": "text",
+          "analyzer": "html_analyzer"
+        },
+        "Received Date": {
+          "type": "date"
+        },
+        "Recipients": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "Reply to": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "Sent date": {
+          "type": "date"
+        },
+        "Subject": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        }
+      }
+    }
+  }
+}
