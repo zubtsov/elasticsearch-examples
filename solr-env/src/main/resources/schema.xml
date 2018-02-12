@@ -1,0 +1,37 @@
+<types>
+    <uniqueKey>id</uniqueKey>
+
+    <fieldType name="text_general" class="solr.TextField" positionIncrementGap="100" multiValued="true">
+        <analyzer type="index">
+            <charFilter class="solr.HTMLStripCharFilterFactory"/>
+            <tokenizer class="solr.StandardTokenizerFactory"/>
+            <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
+            <filter class="solr.StopFilterFactory" words="stopwords_ru.txt" ignoreCase="true"/>
+            <filter class="solr.LowerCaseFilterFactory"/>
+        </analyzer>
+        <analyzer type="query">
+            <tokenizer class="solr.StandardTokenizerFactory"/>
+            <filter class="solr.StopFilterFactory" words="stopwords.txt" ignoreCase="true"/>
+            <filter class="solr.SynonymGraphFilterFactory" expand="true" ignoreCase="true" synonyms="synonyms.txt"/>
+            <filter class="solr.LowerCaseFilterFactory"/>
+        </analyzer>
+    </fieldType>
+    <fieldType name="pdate" class="solr.DatePointField" docValues="true" multiValued="false"/>
+
+    <field name="id" type="string" multiValued="false" indexed="true" required="true" stored="true"/>
+    <field name="content" type="text_general"/>
+    <field name="folder" type="text_general"/>
+    <field name="from" type="text_general"/>
+    <field name="received_date" type="pdate"/>
+    <field name="recipients" type="text_general"/>
+    <field name="reply_to" type="text_general"/>
+    <field name="sent_date" type="pdate"/>
+    <field name="subject" type="text_general"/>
+
+    <copyField source="folder" dest="folder_str" maxChars="256"/>
+    <copyField source="reply_to" dest="reply_to_str" maxChars="256"/>
+    <copyField source="subject" dest="subject_str" maxChars="256"/>
+    <copyField source="recipients" dest="recipients_str" maxChars="256"/>
+    <copyField source="from" dest="from_str" maxChars="256"/>
+    <copyField source="content" dest="content_str" maxChars="256"/>
+</types>
