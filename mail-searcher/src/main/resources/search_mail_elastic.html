@@ -5,8 +5,9 @@
     <title>Mail searcher</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+<!--TODO: add exception and errors handling-->
 <body>
-    <script>
+<script>
     function loadDocs() {
       var xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = function() {
@@ -42,33 +43,42 @@
             numberCell.innerHTML=i;
 
             folderCell.innerHTML=hit._source.Folder;
-            fromCell.innerHTML=hit._source.From;
+            fromCell.innerHTML=escapeHtml(hit._source.From.toString());
             subjectCell.innerHTML=hit._source.Subject;
             sentDateCell.innerHTML=hit._source["Sent date"];
             receivedDateCell.innerHTML=hit._source["Received Date"];
-            recipientsCell.innerHTML=hit._source.Recipients;
-            replyToCell.innerHTML=hit._source["Reply to"];
+            recipientsCell.innerHTML=escapeHtml(hit._source.Recipients.toString());
+            replyToCell.innerHTML=escapeHtml(hit._source["Reply to"].toString());
           }
 
           document.getElementById("results").innerHTML="";
           document.getElementById("results").append(table);
         }
       };
+      function escapeHtml(unsafe) {
+        return unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+      };
       xhttp.open("POST", document.getElementById("url").value, true);
       xhttp.setRequestHeader("Content-Type", "application/json");
       xhttp.send(document.getElementById("query").value);
     }
-    </script>
 
-    <form>
-        Query:
-        <input type="text" id="query" value='{ "query": { "match_all": {} } }'/> <br/>
-        URL:
-        <input type="text" id="url" value="http://localhost:9200/_search"/>
-    </form>
+</script>
 
-    <button type="button" onclick="loadDocs()">Search!</button>
-    <div id="results">
-    </div>
+<form>
+    Query:
+    <input type="text" id="query" value='{ "query": { "match_all": {} } }'/> <br/>
+    URL:
+    <input type="text" id="url" value="http://localhost:9200/_search"/>
+</form>
+
+<button type="button" onclick="loadDocs()">Search!</button>
+<div id="results">
+</div>
 </body>
 </html>
