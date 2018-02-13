@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>A&B test</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="text/javascript" src="a_b_script.js"></script>
+</head>
+<body>
+<form>
+    URL1:
+    <input type="text" id="url1" value="http://localhost:8080/solr/outlook_mail/select?fl=id&q=*:*&rows=100"/>
+    URL2:
+    <input type="text" id="url2" value="http://localhost:8080/solr/outlook_mail/select?fl=id&q=*:*&rows=100"/>
+
+    <table>
+        <tr>
+            <td id="results1"></td>
+            <td id="results2"></td>
+        </tr>
+    </table>
+
+    <button type="button" onclick="loadDocs()">Search!</button>
+</form>
+</body>
+</html>
