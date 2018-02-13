@@ -16,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 
+@Deprecated
 @Controller
 @EnableAutoConfiguration
 public class AllowCORSProxy {

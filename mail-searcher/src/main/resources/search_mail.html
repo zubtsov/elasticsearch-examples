@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Mail searcher</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <script>
@@ -11,24 +12,63 @@
       xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
           var response = JSON.parse(this.responseText);
-          document.getElementById("results").innerHTML = "<table border=\"1\"><tr><th>From</th><th>Subject</th></tr>" + "<tr>" +
-          "<td>" + response.hits.hits[0]._source.From + "</td>" +
-          "<td>" + response.hits.hits[0]._source.Subject + "</td>" + "</tr>"
-          "</table>"
+
+          var table = document.createElement("TABLE");
+          var header = table.createTHead();
+          var row = header.insertRow(0);
+          row.insertCell().innerHTML="<b>Order</b>";
+          row.insertCell().innerHTML="<b>Folder</b>";
+          row.insertCell().innerHTML="<b>From</b>";
+          row.insertCell().innerHTML="<b>Subject</b>";
+          row.insertCell().innerHTML="<b>Sent date</b>";
+          row.insertCell().innerHTML="<b>Received date</b>";
+          row.insertCell().innerHTML="<b>Recipients</b>";
+          row.insertCell().innerHTML="<b>Reply to</b>";
+
+          var hit;
+          for (i = 0; i < response.hits.hits.length; i++) {
+            hit = response.hits.hits[i];
+
+            var row = table.insertRow();
+            var numberCell = row.insertCell();
+            var folderCell = row.insertCell();
+            var fromCell = row.insertCell();
+            var subjectCell = row.insertCell();
+            var sentDateCell = row.insertCell();
+            var receivedDateCell = row.insertCell();
+            var recipientsCell = row.insertCell();
+            var replyToCell = row.insertCell();
+
+            numberCell.innerHTML=i;
+
+            folderCell.innerHTML=hit._source.Folder;
+            fromCell.innerHTML=hit._source.From;
+            subjectCell.innerHTML=hit._source.Subject;
+            sentDateCell.innerHTML=hit._source["Sent date"];
+            receivedDateCell.innerHTML=hit._source["Received Date"];
+            recipientsCell.innerHTML=hit._source.Recipients;
+            replyToCell.innerHTML=hit._source["Reply to"];
+          }
+
+          document.getElementById("results").innerHTML="";
+          document.getElementById("results").append(table);
         }
       };
-      xhttp.open("POST", "http://localhost:8080/", true);
+      xhttp.open("POST", document.getElementById("url").value, true);
+      xhttp.setRequestHeader("Content-Type", "application/json");
       xhttp.send(document.getElementById("query").value);
     }
     </script>
 
     <form>
-        <input type="text" id="query" value='{ "query": { "match_all": {} } }'/>
+        Query:
+        <input type="text" id="query" value='{ "query": { "match_all": {} } }'/> <br/>
+        URL:
+        <input type="text" id="url" value="http://localhost:9200/_search"/>
     </form>
 
     <button type="button" onclick="loadDocs()">Search!</button>
     <div id="results">
-        Search results...
     </div>
 </body>
 </html>
