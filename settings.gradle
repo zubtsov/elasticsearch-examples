@@ -22,4 +22,5 @@ include 'elasticsearch-python'
 include 'elasticsearch-groovy'
 include 'solr-env'
 include 'mail-uploader'
+include 'mail-searcher'
 

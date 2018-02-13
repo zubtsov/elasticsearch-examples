@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mail searcher</title>
+</head>
+<body>
+    <script>
+    function loadDocs() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          document.getElementById("results").innerHTML =
+          this.responseText;
+        }
+      };
+      xhttp.open("POST", "http://localhost:8080/", true);
+      xhttp.send(document.getElementById("query").value);
+    }
+    </script>
+
+    <form>
+        <input type="text" id="query" value='{ "query": { "match_all": {} } }'/>
+    </form>
+
+    <button type="button" onclick="loadDocs()">Search!</button>
+    <div id="results">
+        Search results...
+    </div>
+</body>
+</html>
