@@ -39,7 +39,7 @@ public class AllowCORSProxy {
         elasticHeaders.add("Content-Type", "application/json");
         HttpEntity<String> entity = new HttpEntity<>(query, elasticHeaders);
 
-        String response = restTemplate.postForEntity("http://localhost:9200/_search?pretty", entity, String.class).getBody();
+        String response = restTemplate.postForEntity("http://localhost:9200/_search", entity, String.class).getBody();
 
         ResponseEntity<String> responseEntity = new ResponseEntity<>(response, headers, HttpStatus.OK);
 
