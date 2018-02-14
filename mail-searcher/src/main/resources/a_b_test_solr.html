@@ -9,9 +9,11 @@
 <body>
 <form>
     URL1:
-    <input type="text" id="url1" value="http://localhost:8080/solr/outlook_mail/select?fl=id,from,subject&q=*:*&rows=10"/>
+    <input type="text" id="url1" value="http://localhost:8080/solr/outlook_mail/select?fl=id,from,subject&q=*:*&rows=10" size="100"/> <br/>
     URL2:
-    <input type="text" id="url2" value="http://localhost:8080/solr/outlook_mail/select?fl=id,from,subject&q=*:*&rows=10"/>
+    <input type="text" id="url2" value="http://localhost:8080/solr/outlook_mail/select?fl=id,from,subject&q=*:*&rows=10" size="100"/> <br/>
+
+    <button type="button" onclick="loadDocs()">Search!</button><br/>
 
     <table>
         <tr>
@@ -19,8 +21,6 @@
             <td id="results2"></td>
         </tr>
     </table>
-
-    <button type="button" onclick="loadDocs()">Search!</button>
 </form>
 </body>
 </html>
