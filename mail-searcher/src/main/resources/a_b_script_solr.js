@@ -14,15 +14,23 @@ function loadTable(urlString, tagId) {
   xhttp.send();
 }
 function jsonToTable(jsonString) {
-    var table = document.createElement("TABLE");
-    var tableHeader = table.createTHead();
-    tableHeader.insertRow().innerHTML = "ID";
-
     var docs = JSON.parse(jsonString).response.docs;
+
+    var table = document.createElement("TABLE");
+    var tableHeader = table.createTHead().insertRow();
+    for (var property in docs[0]) {
+        if (docs[0].hasOwnProperty(property)) {
+            tableHeader.insertCell().innerHTML = property.toString();
+        }
+    }
 
     for (i = 0; i < docs.length; i++) {
         var row = table.insertRow();
-        row.insertCell().innerHTML = docs[i].id;
+        for (var property in docs[i]) {
+            if (docs[i].hasOwnProperty(property)) {
+                row.insertCell().innerHTML = escapeHtml(docs[i][property.toString()].toString());
+            }
+        }
     }
 
     return table;
