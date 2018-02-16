@@ -1,18 +1,23 @@
 version: '3.4'
+#TODO: deploy zookeeper for service discovery
 #TODO: add dedicated zookeeper nodes
 #TODO: eliminate duplication of configuration
 #TODO: esure proper start-up ordering (Elasticsearch must run before logstash)
 #TODO: check fault tolerance & restartability
+#TODO: mount config directories!!!
 services:
-  elasticsearch:
+#ELASTICSEARCH CLUSTER
+  elasticsearch1:
     image: elasticsearch-zubtsov:latest
     container_name: zubtsov-es1
     environment:
       - cluster.name=zubtsov-es-cluster
+      - node.name=first-node
+      - network.host=192.168.0.2
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - discovery.zen.ping.unicast.hosts=elasticsearch1,elasticsearch2
+      - discovery.zen.minimum_master_nodes=2
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - "discovery.zen.ping.unicast.hosts=elasticsearch"
-      - "discovery.zen.minimum_master_nodes=2"
     ulimits:
       memlock:
         soft: -1
@@ -23,59 +28,92 @@ services:
       - 9200:9200
       - 9300:9300
     networks:
-      - esnet
+      mailuploadernet:
+        ipv4_address: 192.168.0.2
   elasticsearch2:
     image: elasticsearch-zubtsov:latest
     container_name: zubtsov-es2
     environment:
       - cluster.name=zubtsov-es-cluster
+      - node.name=second-node
+      - network.host=192.168.0.3
+      - discovery.zen.ping.unicast.hosts=elasticsearch1,elasticsearch2
+      - discovery.zen.minimum_master_nodes=2
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - "discovery.zen.ping.unicast.hosts=elasticsearch"
-      - "discovery.zen.minimum_master_nodes=2"
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
       - esdata2:/usr/share/elasticsearch/data
+    ports:
+      - 9201:9200
+      - 9301:9300
     networks:
-      - esnet
+      mailuploadernet:
+        ipv4_address: 192.168.0.3
+
+#SOLR CLUSTER TODO: fix configuration and test
+  solr1:
+    image: solr-zubtsov
+    container_name: zubtsov-solr1
+    ports:
+     - 8983:8983
+    volumes:
+      - solrdata1:/opt/solr/server/solr/mycores #TODO: how to locate/reside all cores in this folder?
+    networks:
+      mailuploadernet:
+        ipv4_address: 192.168.1.1
+    entrypoint:
+      - docker-entrypoint.sh
+      - solr-precreate
+      - outlook_mail
+      - /opt/solr/server/solr/configsets/outlook_mail
+  solr2:
+      image: solr-zubtsov
+      container_name: zubtsov-solr2
+      ports:
+       - 8984:8983
+      volumes:
+        - solrdata2:/opt/solr/server/solr/mycores #TODO: how to locate/reside all cores in this folder?
+      networks:
+        mailuploadernet:
+          ipv4_address: 192.168.1.2
+      entrypoint:
+        - docker-entrypoint.sh
+        - solr-precreate
+        - outlook_mail
+        - /opt/solr/server/solr/configsets/outlook_mail
+
+#LOGSTASH
   logstash:
     image: logstash-zubtsov:latest
     container_name: zubtsov-logstash
     ports:
       - 9600:9600
     networks:
-      - esnet
+      mailuploadernet:
+        ipv4_address: 192.168.3.1
     volumes:
       - logstashdata:/usr/share/logstash/data
-  solr:
-    image: solr-zubtsov
-    container_name: zubtsov-solr
-    ports:
-     - 8983:8983
-    volumes:
-      - solrdata:/opt/solr/server/solr/mycores #TODO: how to locate/reside all cores in this folder?
-    networks:
-      - esnet
-    entrypoint:
-      - docker-entrypoint.sh
-      - solr-precreate
-      - outlook_mail
-      - /opt/solr/server/solr/configsets/outlook_mail
-#TODO: create network with subnet and assign static ip addresses to containers
-#        ipv4_address: 192.168.200.1
 
 volumes:
   esdata1:
     driver: local
   esdata2:
     driver: local
+  solrdata1:
+    driver: local
+  solrdata2:
+      driver: local
   logstashdata:
-    driver: local
-  solrdata:
-    driver: local
+      driver: local
 
 networks:
-  esnet:
+  mailuploadernet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.0.0/16
