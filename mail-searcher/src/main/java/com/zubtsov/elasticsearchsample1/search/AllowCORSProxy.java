@@ -15,7 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
-//TODO: replace with configurated reverse proxy
+//TODO: replace with configured reverse proxy
 @Controller
 @EnableAutoConfiguration
 public class AllowCORSProxy {

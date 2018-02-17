@@ -1,4 +1,0 @@
-#Elasticsearch configuration file
-http.cors:
-  enabled: true
-  allow-origin: "*"

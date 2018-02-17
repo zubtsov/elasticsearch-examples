@@ -5,4 +5,3 @@ COPY --chown=logstash:logstash logstash.conf /usr/share/logstash/pipeline/
 #COPY --chown=logstash:logstash mail.csv /usr/share/logstash/
 #TODO: install solr_http plugin
 #RUN ./bin/logstash-plugin install solr_http
-ENV LOG_LEVEL "info"
