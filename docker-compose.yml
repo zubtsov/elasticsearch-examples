@@ -1,4 +1,5 @@
 version: '3.4'
+#TODO: define different networks
 #TODO: how to upload outlook_mail schema to zookeeper?
 #TODO: automate mapping/schema creation
 #TODO: IMPORTANT!!! UPLOAD OUTLOOK_MAIL CONFIG TO ZOOKEEPER. WHO IS RESPONSIBLE?

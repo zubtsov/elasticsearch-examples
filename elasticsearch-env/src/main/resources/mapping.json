@@ -1,4 +1,3 @@
-//put this automatically to <elastic_url>/outlook_mail
 {
   "settings": {
     "analysis": {

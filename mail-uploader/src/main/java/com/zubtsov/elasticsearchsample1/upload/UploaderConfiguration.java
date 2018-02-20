@@ -38,7 +38,7 @@ public class UploaderConfiguration {
     //TODO: replace to cron expression & handle exceptions
     @Scheduled(fixedDelay = 3600000)
     public void uploadEmails() throws Exception {
-//        jobLauncher.run(uploadEmailsToElasticsearch, new JobParameters());
+        jobLauncher.run(uploadEmailsToElasticsearch, new JobParameters());
         jobLauncher.run(uploadEmailsToSolr, new JobParameters());
     }
 }
