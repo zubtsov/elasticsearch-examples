@@ -1,15 +1,10 @@
 version: '3.4'
-#TODO: expose all API through reverse proxy server
+#TODO: configure apache http server
+#TODO: expose ALL API through reverse proxy server
 #TODO: collect cofiguration parameters in one place (eliminate duplication & hardcode)
-#TODO: add load balancing
 #TODO: define different networks?
-#TODO: how to upload outlook_mail schema to zookeeper?
-#TODO: automate mapping/schema creation
-#TODO: IMPORTANT!!! UPLOAD OUTLOOK_MAIL CONFIG TO ZOOKEEPER. WHO IS RESPONSIBLE?
 #TODO: eliminate duplication of configuration
-#TODO: esure proper start-up ordering (Elasticsearch must run before logstash)
-#TODO: check fault tolerance & restartability
-#TODO: mount config directories!!!
+#TODO: ensure fault tolerance/failover, high availability/restartability
 #TODO: create cluster of at least 3 PC (use overlay networks + docker swarm)
 services:
 #ELASTICSEARCH CLUSTER
@@ -67,6 +62,8 @@ services:
     networks:
       mailuploadernet:
         ipv4_address: 192.168.2.0
+    depends_on:
+      - zoo1,zoo2
   solr2:
     image: solr:7.2.1
     container_name: zubtsov-solr2
@@ -79,6 +76,8 @@ services:
     networks:
       mailuploadernet:
         ipv4_address: 192.168.2.1
+    depends_on:
+      - zoo1,zoo2
 
 #ZOOKEEPER TODO: how to bind to normal ip address (not 0.0.0.0)?
   zoo1:
@@ -118,22 +117,22 @@ services:
   nginx:
     image: nginx-zubtsov
     ports:
-     - 8000:8000
+     - 8080:8080
     networks:
       mailuploadernet:
         ipv4_address: 192.168.4.0
 
 #APACHE HTTP SERVER TODO: fix
-  httpd:
-    image: httpd-zubtsov
-    container_name: httpd-zubtsov
-    networks:
-      mailuploadernet:
-        ipv4_address: 192.168.5.0
-    ports:
-      - 8000:8000
-      - 80:80
-      - 443:443
+#  httpd:
+#    image: httpd-zubtsov
+#    container_name: httpd-zubtsov
+#    networks:
+#      mailuploadernet:
+#        ipv4_address: 192.168.5.0
+#    ports:
+#      - 8000:8000
+#      - 80:80
+#      - 443:443
 
 #LOGSTASH
   logstash:
@@ -148,6 +147,8 @@ services:
         ipv4_address: 192.168.6.0
     volumes:
       - logstashdata:/usr/share/logstash/data
+    depends_on:
+      - solr1,solr2,elasticsearch1,elasticsearch2
 
 volumes:
   esdata1:
