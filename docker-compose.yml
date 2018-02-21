@@ -65,17 +65,17 @@ services:
       mailuploadernet:
         ipv4_address: 192.168.2.0
   solr2:
-      image: solr:7.2.1
-      container_name: zubtsov-solr2
-      environment:
-        - ZK_HOST=zoo1,zoo2
-      ports:
-       - 8984:8983
-      volumes:
-        - solrdata2:/opt/solr/server/solr/mycores #TODO: how to locate/reside all cores in this folder?
-      networks:
-        mailuploadernet:
-          ipv4_address: 192.168.2.1
+    image: solr:7.2.1
+    container_name: zubtsov-solr2
+    environment:
+      - ZK_HOST=zoo1,zoo2
+    ports:
+     - 8984:8983
+    volumes:
+      - solrdata2:/opt/solr/server/solr/mycores #TODO: how to locate/reside all cores in this folder?
+    networks:
+      mailuploadernet:
+        ipv4_address: 192.168.2.1
 
 #ZOOKEEPER TODO: how to bind to normal ip address (not 0.0.0.0)?
   zoo1:
@@ -92,8 +92,8 @@ services:
       - zoo1data:/data
       - zoo1datalog:/datalog
     networks:
-          mailuploadernet:
-            ipv4_address: 192.168.3.0
+      mailuploadernet:
+        ipv4_address: 192.168.3.0
   zoo2:
     image: zookeeper
     container_name: zubtsov-zoo2
@@ -108,10 +108,31 @@ services:
       - zoo2data:/data
       - zoo2datalog:/datalog
     networks:
-          mailuploadernet:
-            ipv4_address: 192.168.3.1
+      mailuploadernet:
+        ipv4_address: 192.168.3.1
 
-#LOGSTASH TODO: move to IMAP
+#NGINX
+  nginx:
+    image: nginx-zubtsov
+    ports:
+     - 8000:8000
+    networks:
+      mailuploadernet:
+        ipv4_address: 192.168.4.0
+
+#APACHE HTTP SERVER TODO: fix
+  httpd:
+    image: httpd-zubtsov
+    container_name: httpd-zubtsov
+    networks:
+      mailuploadernet:
+        ipv4_address: 192.168.5.0
+    ports:
+      - 8000:8000
+      - 80:80
+      - 443:443
+
+#LOGSTASH
   logstash:
     image: logstash-zubtsov:latest
     container_name: zubtsov-logstash
@@ -121,7 +142,7 @@ services:
       - 9600:9600
     networks:
       mailuploadernet:
-        ipv4_address: 192.168.4.0
+        ipv4_address: 192.168.6.0
     volumes:
       - logstashdata:/usr/share/logstash/data
 
