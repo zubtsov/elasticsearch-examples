@@ -16,7 +16,6 @@ import org.springframework.web.client.RestTemplate;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
-//TODO: replace with configured reverse proxy (APACHE HTTP)
 @Deprecated
 @Controller
 @EnableAutoConfiguration

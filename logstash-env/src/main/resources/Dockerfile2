@@ -1,5 +1,4 @@
 FROM logstash-zubtsov-base:latest
-#TODO: Replace with bind mount?
 RUN rm -f /usr/share/logstash/pipeline/logstash.conf
 
 COPY --chown=logstash:logstash logstash.conf /usr/share/logstash/pipeline/
