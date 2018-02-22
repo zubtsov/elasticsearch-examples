@@ -1,4 +1,5 @@
 version: '3.4'
+#TODO: how to set ulimits in swarm mode???
 #TODO: configure apache http server
 #TODO: expose ALL API through reverse proxy server
 #TODO: collect cofiguration parameters in one place (eliminate duplication & hardcode)
@@ -25,10 +26,10 @@ services:
     networks:
       mailuploadernet:
         ipv4_address: 192.168.1.0
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
+#    ulimits:
+#      memlock:
+#        soft: -1
+#        hard: -1
     deploy:
       placement:
         constraints:
@@ -122,14 +123,13 @@ services:
         constraints:
           - node.labels.zoo1 == true
       restart_policy:
-        condition: always
+        condition: any
   zoo2:
     image: zookeeper
     container_name: zubtsov-zoo2
     environment:
       ZOO_MY_ID: 2
       ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888
-    restart: always
     hostname: zoo2
     ports:
       - 2182:2181
@@ -144,7 +144,7 @@ services:
         constraints:
           - node.labels.zoo2 == true
       restart_policy:
-        condition: always
+        condition: any
 
 #NGINX
   nginx:
