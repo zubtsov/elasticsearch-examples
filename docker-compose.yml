@@ -1,4 +1,5 @@
 version: '3.4'
+#TODO: IMPORTANT!!! WHY CONTAINERS ON DIFFERENT NODES CAN'T ACCESS EACH OTHER?
 #TODO: configure apache http server
 #TODO: expose ALL API through reverse proxy server
 #TODO: collect cofiguration parameters in one place (eliminate duplication & hardcode)
@@ -26,7 +27,6 @@ services:
       mailuploadernet:
         ipv4_address: 192.168.1.0 #unsupported in swarm mode
     deploy:
-#      endpoint_mode: dnsrr
       placement:
         constraints:
           - node.labels.elastic1 == true
@@ -50,7 +50,6 @@ services:
       mailuploadernet:
         ipv4_address: 192.168.1.1 #unsupported in swarm mode
     deploy:
-#      endpoint_mode: dnsrr
       placement:
         constraints:
           - node.labels.elastic2 == true
@@ -69,7 +68,7 @@ services:
       - solrdata1:/opt/solr/server/solr/mycores #TODO: how to locate/reside all cores in this folder?
     networks:
       mailuploadernet:
-        ipv4_address: 192.168.2.0
+        ipv4_address: 192.168.2.0 #unsupported in swarm mode
     depends_on:
       - zoo1
       - zoo2
@@ -77,6 +76,9 @@ services:
       placement:
         constraints:
           - node.labels.solr1 == true
+      restart_policy:
+        condition: any
+        delay: "1s"
   solr2:
     image: solr:7.2.1
     container_name: zubtsov-solr2 #unsupported in swarm mode
@@ -88,7 +90,7 @@ services:
       - solrdata2:/opt/solr/server/solr/mycores #TODO: how to locate/reside all cores in this folder?
     networks:
       mailuploadernet:
-        ipv4_address: 192.168.2.1
+        ipv4_address: 192.168.2.1 #unsupported in swarm mode
     depends_on:
       - zoo1
       - zoo2
@@ -96,6 +98,9 @@ services:
       placement:
         constraints:
           - node.labels.solr2 == true
+      restart_policy:
+        condition: any
+        delay: "1s"
 
 #ZOOKEEPER TODO: how to bind to valid ip address (not 0.0.0.0)?
   zoo1:
@@ -112,13 +117,14 @@ services:
       - zoo1datalog:/datalog
     networks:
       mailuploadernet:
-        ipv4_address: 192.168.3.0
+        ipv4_address: 192.168.3.0 #unsupported in swarm mode
     deploy:
       placement:
         constraints:
           - node.labels.zoo1 == true
       restart_policy:
         condition: any
+        delay: "1s"
   zoo2:
     image: zookeeper
     container_name: zubtsov-zoo2 #unsupported in swarm mode
@@ -133,20 +139,21 @@ services:
       - zoo2datalog:/datalog
     networks:
       mailuploadernet:
-        ipv4_address: 192.168.3.1
+        ipv4_address: 192.168.3.1 #unsupported in swarm mode
     deploy:
       placement:
         constraints:
           - node.labels.zoo2 == true
       restart_policy:
         condition: any
+        delay: "1s"
 
 #NGINX
   nginx:
     image: nginx-zubtsov
     container_name: nginx-zubtsov #unsupported in swarm mode
     ports:
-     - 8081:8080
+     - 8080:8080
     networks:
       mailuploadernet:
         ipv4_address: 192.168.4.0 #unsupported in swarm mode
@@ -155,53 +162,53 @@ services:
         constraints:
           - node.labels.nginx == true
       restart_policy:
-        condition: on-failure
-        max_attempts: 1
+        condition: any
+        delay: "1s"
 
-#APACHE HTTP SERVER TODO: fix
-  httpd:
-    image: httpd-zubtsov
-    container_name: httpd-zubtsov #unsupported in swarm mode
-    networks:
-      mailuploadernet:
-        ipv4_address: 192.168.5.0
-    ports:
-      - 8000:8000
-      - 80:80
-      - 443:443
-    deploy:
-      placement:
-        constraints:
-          - node.labels.httpd == true
-      restart_policy:
-        condition: on-failure
-        max_attempts: 1
-
-#LOGSTASH
-  logstash:
-    image: logstash-zubtsov:latest
-    container_name: zubtsov-logstash #unsupported in swarm mode
-    environment:
-      - LOG_LEVEL=info
-    ports:
-      - 9600:9600
-    networks:
-      mailuploadernet:
-        ipv4_address: 192.168.6.0
-    volumes:
-      - logstashdata:/usr/share/logstash/data
-    depends_on:
-      - solr1
-      - solr2
-      - elasticsearch1
-      - elasticsearch2
-    deploy:
-      placement:
-        constraints:
-          - node.labels.logstash == true
-      restart_policy:
-        condition: on-failure
-        max_attempts: 1
+##APACHE HTTP SERVER TODO: fix
+#  httpd:
+#    image: httpd-zubtsov
+#    container_name: httpd-zubtsov #unsupported in swarm mode
+#    networks:
+#      mailuploadernet:
+#        ipv4_address: 192.168.5.0
+#    ports:
+#      - 8000:8000
+#      - 80:80
+#      - 443:443
+#    deploy:
+#      placement:
+#        constraints:
+#          - node.labels.httpd == true
+#      restart_policy:
+#        condition: on-failure
+#        max_attempts: 1
+#
+##LOGSTASH
+#  logstash:
+#    image: logstash-zubtsov:latest
+#    container_name: zubtsov-logstash #unsupported in swarm mode
+#    environment:
+#      - LOG_LEVEL=info
+#    ports:
+#      - 9600:9600
+#    networks:
+#      mailuploadernet:
+#        ipv4_address: 192.168.6.0
+#    volumes:
+#      - logstashdata:/usr/share/logstash/data
+#    depends_on:
+#      - solr1
+#      - solr2
+#      - elasticsearch1
+#      - elasticsearch2
+#    deploy:
+#      placement:
+#        constraints:
+#          - node.labels.logstash == true
+#      restart_policy:
+#        condition: on-failure
+#        max_attempts: 1
 
 volumes:
   esdata1:
