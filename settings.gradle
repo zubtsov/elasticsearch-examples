@@ -24,4 +24,6 @@ include 'solr-env'
 include 'mail-uploader'
 include 'mail-searcher'
 include 'nginx-env'
+include 'httpd-env'
+include 'logstash-env'
 

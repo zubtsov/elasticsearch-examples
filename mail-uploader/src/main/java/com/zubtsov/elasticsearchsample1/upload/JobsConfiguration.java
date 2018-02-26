@@ -6,7 +6,6 @@ import com.zubtsov.elasticsearchsample1.upload.outlook.EmailMessage;
 import com.zubtsov.elasticsearchsample1.upload.outlook.OutlookItemReader;
 import com.zubtsov.elasticsearchsample1.upload.solr.EmailMessageToSolrInputDocument;
 import com.zubtsov.elasticsearchsample1.upload.solr.SolrItemWriter;
-import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.common.SolrInputDocument;
 import org.elasticsearch.client.transport.TransportClient;
@@ -46,7 +45,7 @@ public class JobsConfiguration {
     @Qualifier("Upload e-mails to Elasticsearch job")
     public Job uploadEmailsToElasticsearch(@Qualifier("Upload e-mails to Elasticsearch step") Step retrieveAndStoreEmails) throws Exception {
         return jobBuilderFactory.get("Upload e-mails to Elasticsearch")
-                .incrementer(new RunIdIncrementer()) //what is it? TODO: clarify
+                .incrementer(new RunIdIncrementer())
                 .start(retrieveAndStoreEmails)
                 .build();
     }
@@ -57,7 +56,7 @@ public class JobsConfiguration {
                                                     @Qualifier("Elasticsearch processor") ItemProcessor<EmailMessage, XContentBuilder> processor,
                                                     @Qualifier("Elasticsearch writer") ItemWriter<XContentBuilder> elasticsearchItemWriter) {
         return stepBuilderFactory.get("Retrieve e-mail via IMAP and store via Elasticsearch transport client")
-                .<EmailMessage, XContentBuilder>chunk(25) //TODO: select proper chunk size
+                .<EmailMessage, XContentBuilder>chunk(25)
                 .reader(outlookItemReader)
                 .processor(processor)
                 .writer(elasticsearchItemWriter)
@@ -68,7 +67,7 @@ public class JobsConfiguration {
     @Qualifier("Upload e-mails to Solr job")
     public Job uploadEmailsToSolr(@Qualifier("Upload e-mails to Solr step") Step retrieveAndStoreEmails) throws Exception {
         return jobBuilderFactory.get("Upload e-mails to Solr")
-                .incrementer(new RunIdIncrementer()) //what is it? TODO: clarify
+                .incrementer(new RunIdIncrementer())
                 .start(retrieveAndStoreEmails)
                 .build();
     }
@@ -79,7 +78,7 @@ public class JobsConfiguration {
                                        @Qualifier("Solr processor") ItemProcessor<EmailMessage, SolrInputDocument> processor,
                                        @Qualifier("Solr writer") ItemWriter<SolrInputDocument> solrItemWriter) {
         return stepBuilderFactory.get("Retrieve e-mail via IMAP and store via Elasticsearch transport client")
-                .<EmailMessage, SolrInputDocument>chunk(25) //TODO: select proper chunk size
+                .<EmailMessage, SolrInputDocument>chunk(25)
                 .reader(outlookItemReader)
                 .processor(processor)
                 .writer(solrItemWriter)
@@ -116,16 +115,15 @@ public class JobsConfiguration {
         return new SolrItemWriter();
     }
 
-    //TODO: implement closing connection. use same approach for elasticsearch API
-    @Bean
-    public SolrClient httpSolrClient(@Value("${solr.url}") String solrUrl) {
+    @Bean(destroyMethod = "close") //by defaut
+    public HttpSolrClient httpSolrClient(@Value("${solr.url}") String solrUrl) {
         return new HttpSolrClient.Builder(solrUrl)
                 .withConnectionTimeout(10000)
                 .withSocketTimeout(60000)
                 .build();
     }
 
-    @Bean
+    @Bean(destroyMethod = "close") //by default
     public TransportClient elasticTransportClient(@Value("${elasticsearch.cluster.name}") String clusterName,
                                                   @Value("${elasticsearch.host}") String elasticHost,
                                                   @Value("${elasticsearch.port}") int elasticPort) throws UnknownHostException {

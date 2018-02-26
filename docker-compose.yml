@@ -1,5 +1,5 @@
 version: '3.4'
-#TODO: how to set ulimits in swarm mode???
+#TODO: fix elasticsearch discovering in swarm mode
 #TODO: configure apache http server
 #TODO: expose ALL API through reverse proxy server
 #TODO: collect cofiguration parameters in one place (eliminate duplication & hardcode)
@@ -12,12 +12,11 @@ services:
 #ELASTICSEARCH CLUSTER
   elasticsearch1:
     image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.1.2
-    container_name: zubtsov-es1
+    container_name: zubtsov-es1 #unsupported in swarm mode
     env_file: ./elasticsearch-env/src/main/resources/elastic_common.env
     environment:
       - node.name=first-node
-      - network.host=elasticsearch1
-      - discovery.zen.ping.unicast.hosts=elasticsearch1,elasticsearch2
+      - discovery.zen.ping.unicast.hosts=elasticsearch1
     volumes:
       - esdata1:/usr/share/elasticsearch/data
     ports:
@@ -25,12 +24,9 @@ services:
       - 9300:9300
     networks:
       mailuploadernet:
-        ipv4_address: 192.168.1.0
-#    ulimits:
-#      memlock:
-#        soft: -1
-#        hard: -1
+        ipv4_address: 192.168.1.0 #unsupported in swarm mode
     deploy:
+#      endpoint_mode: dnsrr
       placement:
         constraints:
           - node.labels.elastic1 == true
@@ -39,12 +35,11 @@ services:
         max_attempts: 1
   elasticsearch2:
     image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.1.2
-    container_name: zubtsov-es2
+    container_name: zubtsov-es2 #unsupported in swarm mode
     env_file: ./elasticsearch-env/src/main/resources/elastic_common.env
     environment:
       - node.name=second-node
-      - network.host=elasticsearch2
-      - discovery.zen.ping.unicast.hosts=elasticsearch1,elasticsearch2
+      - discovery.zen.ping.unicast.hosts=elasticsearch1
     volumes:
       - esdata2:/usr/share/elasticsearch/data
     ports:
@@ -52,20 +47,19 @@ services:
       - 9301:9300
     networks:
       mailuploadernet:
-        ipv4_address: 192.168.1.1
-#    ulimits:
-#      memlock:
-#        soft: -1
-#        hard: -1
+        ipv4_address: 192.168.1.1 #unsupported in swarm mode
     deploy:
+#      endpoint_mode: dnsrr
       placement:
         constraints:
           - node.labels.elastic2 == true
+    depends_on:
+      - elasticsearch1
 
 #SOLR CLUSTER
   solr1:
     image: solr:7.2.1
-    container_name: zubtsov-solr1
+    container_name: zubtsov-solr1 #unsupported in swarm mode
     environment:
       - ZK_HOST=zoo1,zoo2
     ports:
@@ -84,7 +78,7 @@ services:
           - node.labels.solr1 == true
   solr2:
     image: solr:7.2.1
-    container_name: zubtsov-solr2
+    container_name: zubtsov-solr2 #unsupported in swarm mode
     environment:
       - ZK_HOST=zoo1,zoo2
     ports:
@@ -102,10 +96,10 @@ services:
         constraints:
           - node.labels.solr2 == true
 
-#ZOOKEEPER TODO: how to bind to normal ip address (not 0.0.0.0)?
+#ZOOKEEPER TODO: how to bind to valid ip address (not 0.0.0.0)?
   zoo1:
     image: zookeeper
-    container_name: zubtsov-zoo1
+    container_name: zubtsov-zoo1 #unsupported in swarm mode
     environment:
       ZOO_MY_ID: 1
       ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888
@@ -126,7 +120,7 @@ services:
         condition: any
   zoo2:
     image: zookeeper
-    container_name: zubtsov-zoo2
+    container_name: zubtsov-zoo2 #unsupported in swarm mode
     environment:
       ZOO_MY_ID: 2
       ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888
@@ -149,6 +143,7 @@ services:
 #NGINX
   nginx:
     image: nginx-zubtsov
+    container_name: nginx-zubtsov #unsupported in swarm mode
     ports:
      - 8080:8080
     networks:
@@ -165,7 +160,7 @@ services:
 #APACHE HTTP SERVER TODO: fix
   httpd:
     image: httpd-zubtsov
-    container_name: httpd-zubtsov
+    container_name: httpd-zubtsov #unsupported in swarm mode
     networks:
       mailuploadernet:
         ipv4_address: 192.168.5.0
@@ -184,7 +179,7 @@ services:
 #LOGSTASH
   logstash:
     image: logstash-zubtsov:latest
-    container_name: zubtsov-logstash
+    container_name: zubtsov-logstash #unsupported in swarm mode
     environment:
       - LOG_LEVEL=info
     ports:

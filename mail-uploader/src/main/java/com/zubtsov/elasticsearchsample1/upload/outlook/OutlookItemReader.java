@@ -1,5 +1,7 @@
 package com.zubtsov.elasticsearchsample1.upload.outlook;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -16,11 +18,13 @@ import java.util.TreeMap;
 //TODO: implement as Producer-Consumer using stack/queue?
 public class OutlookItemReader implements ItemReader<EmailMessage>, ItemStream {
 
+    public static final Logger logger = LoggerFactory.getLogger(OutlookItemReader.class);
+
     private static final String CURRENT_INDEX = "current.index";
     private static final String CURRENT_FOLDER_NAME = "current.folder.name";
 
     private String currentFolderName;
-    private int currentMessageIndex = 0;
+    private int currentMessageIndex;
 
     private @Value("${mail.folder.name.pattern}")
     String folderNamePattern;
@@ -39,24 +43,23 @@ public class OutlookItemReader implements ItemReader<EmailMessage>, ItemStream {
 
     @Override
     public void open(ExecutionContext executionContext) throws ItemStreamException {
+        logger.debug("Opening reader...");
         try {
             Properties props = new Properties();
             props.setProperty("mail.imap.ssl.enable", "true");
             Session mailSession = Session.getInstance(props);
-//            mailSession.setDebug(true); //to turn on or not to turn on?
             mailStore = mailSession.getStore(mailServerProtocol);
             mailStore.connect(mailServerHost, user, password);
 
             for (Folder folder : mailStore.getDefaultFolder().list(folderNamePattern)) {
-                if (folder.getMessageCount() != 0) { //TODO: use regular expression & refactor
+                if (folder.getMessageCount() != 0) { //TODO: refactor
                     folder.open(Folder.READ_ONLY);
                     foldersMessages.put(folder.getFullName(), folder.getMessages());
                     folder.close();
                 }
             }
         } catch (MessagingException e) {
-            //TODO: handle exception
-            e.printStackTrace();
+            logger.error("Error is occured while opening reader", e);
         }
 
         if (executionContext.containsKey(CURRENT_FOLDER_NAME)) {
@@ -81,10 +84,11 @@ public class OutlookItemReader implements ItemReader<EmailMessage>, ItemStream {
     public void close() throws ItemStreamException {
         try {
             if (mailStore != null) {
+                logger.debug("Closing reader...");
                 mailStore.close();
             }
         } catch (MessagingException e) {
-            //TODO: handle exception
+            logger.error("Error is occured while closing reader", e);
         }
     }
 
@@ -96,6 +100,8 @@ public class OutlookItemReader implements ItemReader<EmailMessage>, ItemStream {
         if (currentFolderName == null) {
             return null;
         }
+
+        logger.debug("Reading another item...");
 
         Message message = foldersMessages.get(currentFolderName)[currentMessageIndex];
         message.getFolder().open(Folder.READ_ONLY);
@@ -127,10 +133,10 @@ public class OutlookItemReader implements ItemReader<EmailMessage>, ItemStream {
         StringBuilder messageContentBuilder = new StringBuilder();
 
         if (content instanceof String) {
-            messageContentBuilder.append((String)content);
+            messageContentBuilder.append((String) content);
         } else if (content instanceof Multipart) {
             Multipart multipart = (Multipart) content;
-            for (int i = 0; i< multipart.getCount(); i++) {
+            for (int i = 0; i < multipart.getCount(); i++) {
                 BodyPart bodyPart = multipart.getBodyPart(i);
                 Object bodyContent = bodyPart.getContent();
                 if (bodyContent instanceof String) {
