@@ -1,5 +1,4 @@
 version: '3.4'
-#TODO: fix elasticsearch discovering in swarm mode
 #TODO: configure apache http server
 #TODO: expose ALL API through reverse proxy server
 #TODO: collect cofiguration parameters in one place (eliminate duplication & hardcode)
@@ -11,12 +10,13 @@ version: '3.4'
 services:
 #ELASTICSEARCH CLUSTER
   elasticsearch1:
-    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.1.2
+    image: elasticsearch-zubtsov #docker.elastic.co/elasticsearch/elasticsearch-oss:6.1.2
     container_name: zubtsov-es1 #unsupported in swarm mode
     env_file: ./elasticsearch-env/src/main/resources/elastic_common.env
     environment:
       - node.name=first-node
       - discovery.zen.ping.unicast.hosts=elasticsearch1
+      - network.publish_host=elasticsearch1 #TODO: replace to the second node?
     volumes:
       - esdata1:/usr/share/elasticsearch/data
     ports:
@@ -34,12 +34,13 @@ services:
         condition: on-failure
         max_attempts: 1
   elasticsearch2:
-    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.1.2
+    image: elasticsearch-zubtsov #docker.elastic.co/elasticsearch/elasticsearch-oss:6.1.2
     container_name: zubtsov-es2 #unsupported in swarm mode
     env_file: ./elasticsearch-env/src/main/resources/elastic_common.env
     environment:
       - node.name=second-node
       - discovery.zen.ping.unicast.hosts=elasticsearch1
+      - network.publish_host=elasticsearch2
     volumes:
       - esdata2:/usr/share/elasticsearch/data
     ports:
@@ -145,10 +146,10 @@ services:
     image: nginx-zubtsov
     container_name: nginx-zubtsov #unsupported in swarm mode
     ports:
-     - 8080:8080
+     - 8081:8080
     networks:
       mailuploadernet:
-        ipv4_address: 192.168.4.0
+        ipv4_address: 192.168.4.0 #unsupported in swarm mode
     deploy:
       placement:
         constraints:

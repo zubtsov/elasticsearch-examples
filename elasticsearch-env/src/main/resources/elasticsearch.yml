@@ -1,0 +1,17 @@
+cluster:
+  name: ${cluster.name}
+http:
+  cors:
+    enabled: ${http.cors.enabled}
+    allow-origin: ${http.cors.allow-origin}
+discovery:
+  zen:
+    minimum_master_nodes: ${discovery.zen.minimum_master_nodes}
+    ping:
+      unicast:
+        hosts: ${discovery.zen.ping.unicast.hosts}
+network:
+  host: ${network.host}
+  publish_host: ${network.publish_host}
+bootstrap:
+  memory_lock: ${bootstrap.memory_lock}
