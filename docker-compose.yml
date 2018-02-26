@@ -1,5 +1,5 @@
 version: '3.4'
-#TODO: IMPORTANT!!! WHY CONTAINERS ON DIFFERENT NODES CAN'T ACCESS EACH OTHER?
+#TODO: IMPORTANT!!! WHY CONTAINERS ON DIFFERENT NODES CAN'T ACCESS EACH OTHER? https://github.com/docker/swarmkit/issues/1429
 #TODO: configure apache http server
 #TODO: expose ALL API through reverse proxy server
 #TODO: collect cofiguration parameters in one place (eliminate duplication & hardcode)
