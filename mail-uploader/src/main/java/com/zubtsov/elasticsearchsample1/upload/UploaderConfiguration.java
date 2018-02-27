@@ -35,9 +35,6 @@ public class UploaderConfiguration {
     @Autowired
     private JobLauncher jobLauncher;
 
-    @Autowired
-    private PlatformTransactionManager transactionManager;
-
     //TODO: handle exceptions
     //TODO: fix parallel job running
     @Scheduled(fixedDelay = 60000)
