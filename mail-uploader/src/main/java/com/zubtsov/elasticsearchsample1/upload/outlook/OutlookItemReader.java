@@ -2,6 +2,7 @@ package com.zubtsov.elasticsearchsample1.upload.outlook;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.annotation.AfterChunk;
 import org.springframework.batch.item.*;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -16,7 +17,7 @@ import java.util.TreeMap;
 //TODO: refactor
 //TODO: research possibility of parallel execution (e.g. one Thread per Folder)
 //TODO: implement as Producer-Consumer using stack/queue?
-public class OutlookItemReader implements ItemReader<EmailMessage>, ItemStream {
+public class OutlookItemReader implements ItemStreamReader<EmailMessage> {
 
     public static final Logger logger = LoggerFactory.getLogger(OutlookItemReader.class);
 
@@ -101,8 +102,6 @@ public class OutlookItemReader implements ItemReader<EmailMessage>, ItemStream {
             return null;
         }
 
-        logger.debug("Reading another item...");
-
         Message message = foldersMessages.get(currentFolderName)[currentMessageIndex];
         message.getFolder().open(Folder.READ_ONLY);
         EmailMessage emailMessage = messageToEmailMessage(message);
@@ -122,7 +121,7 @@ public class OutlookItemReader implements ItemReader<EmailMessage>, ItemStream {
         emailMessage.setSubject(message.getSubject());
         emailMessage.setSentDate(message.getSentDate());
         emailMessage.setReceivedDate(message.getReceivedDate());
-        emailMessage.setRecipients(Arrays.stream(message.getAllRecipients()).map(Address::toString).toArray(String[]::new));
+        emailMessage.setRecipients(Arrays.stream(message.getAllRecipients()).map(Address::toString).toArray(String[]::new)); //TODO: fix NPE
         emailMessage.setReplyTo(Arrays.stream(message.getReplyTo()).map(Address::toString).toArray(String[]::new));
         emailMessage.setContent(messageContentToString(content));
         return emailMessage;
@@ -158,5 +157,10 @@ public class OutlookItemReader implements ItemReader<EmailMessage>, ItemStream {
         } catch (MessagingException e) {
             e.printStackTrace();
         }
+    }
+
+    @AfterChunk
+    private void afterChunk() {
+        logger.debug("Chunk of emails has been loaded successfully");
     }
 }

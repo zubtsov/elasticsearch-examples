@@ -1,5 +1,5 @@
-var tableHeaders = ["Order", "Folder", "From", "Subject", "Sent date", "Received date", "Recipients", "Reply to"];
-var fieldNames = ["Order", "Folder", "From", "Subject", "Sent date", "Received date", "Recipients", "Reply to"];
+var tableHeaders = ["Order", "Folder", "From", "Subject", "Sent date", "Received Date", "Recipients", "Reply to"];
+var fieldNames = ["Folder", "From", "Subject", "Sent date", "Received Date", "Recipients", "Reply to"];
 
 function loadDocs() {
     var xhttp = new XMLHttpRequest();
@@ -11,22 +11,22 @@ function loadDocs() {
             var header = table.createTHead();
             var row = header.insertRow(0);
             for (i = 0; i<tableHeaders.length; i++) {
-            row.insertCell().innerHTML=tableHeaders[i];
-        }
-
-        var hit;
-        for (i = 0; i < response.hits.hits.length; i++) {
-            hit = response.hits.hits[i];
-
-            table.insertRow();
-            row.insertCell().innerHTML=i;
-            for (j = 0; j < fieldNames.length; j++) {
-                row.insertCell().innerHTML=escapeHtml(hit._source[fieldNames[j]].toString());
+                row.insertCell().innerHTML=tableHeaders[i];
             }
-        }
 
-        document.getElementById("results").innerHTML="";
-        document.getElementById("results").append(table);
+            var hit;
+            for (i = 0; i < response.hits.hits.length; i++) {
+                hit = response.hits.hits[i];
+
+                var row = table.insertRow();
+                row.insertCell().innerHTML=i;
+                for (j = 0; j < fieldNames.length; j++) {
+                    row.insertCell().innerHTML=escapeHtml(hit._source[fieldNames[j]].toString());
+                }
+            }
+
+            document.getElementById("results").innerHTML="";
+            document.getElementById("results").append(table);
         }
     };
     xhttp.open("POST", document.getElementById("url").value, true);

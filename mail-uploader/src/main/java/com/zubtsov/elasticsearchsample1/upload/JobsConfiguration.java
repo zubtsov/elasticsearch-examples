@@ -18,7 +18,10 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.launch.support.SimpleJobLauncher;
+import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
@@ -27,6 +30,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -40,6 +44,15 @@ public class JobsConfiguration {
 
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
+
+    @Bean
+    @Autowired
+    public JobLauncher jobLauncher(JobRepository jobRepository) {
+        SimpleJobLauncher jobLauncher = new SimpleJobLauncher();
+        jobLauncher.setTaskExecutor(new SimpleAsyncTaskExecutor()); //TODO: refactor using IOC
+        jobLauncher.setJobRepository(jobRepository);
+        return jobLauncher;
+    }
 
     @Bean
     @Qualifier("Upload e-mails to Elasticsearch job")
@@ -56,7 +69,7 @@ public class JobsConfiguration {
                                                     @Qualifier("Elasticsearch processor") ItemProcessor<EmailMessage, XContentBuilder> processor,
                                                     @Qualifier("Elasticsearch writer") ItemWriter<XContentBuilder> elasticsearchItemWriter) {
         return stepBuilderFactory.get("Retrieve e-mail via IMAP and store via Elasticsearch transport client")
-                .<EmailMessage, XContentBuilder>chunk(25)
+                .<EmailMessage, XContentBuilder>chunk(10)
                 .reader(outlookItemReader)
                 .processor(processor)
                 .writer(elasticsearchItemWriter)
@@ -77,8 +90,8 @@ public class JobsConfiguration {
     public Step retrieveAndStoreEmailsSolr(@Qualifier("Outlook reader") ItemReader<EmailMessage> outlookItemReader,
                                        @Qualifier("Solr processor") ItemProcessor<EmailMessage, SolrInputDocument> processor,
                                        @Qualifier("Solr writer") ItemWriter<SolrInputDocument> solrItemWriter) {
-        return stepBuilderFactory.get("Retrieve e-mail via IMAP and store via Elasticsearch transport client")
-                .<EmailMessage, SolrInputDocument>chunk(25)
+        return stepBuilderFactory.get("Retrieve e-mail via IMAP and store via Solr HTTP client")
+                .<EmailMessage, SolrInputDocument>chunk(10)
                 .reader(outlookItemReader)
                 .processor(processor)
                 .writer(solrItemWriter)
@@ -115,7 +128,7 @@ public class JobsConfiguration {
         return new SolrItemWriter();
     }
 
-    @Bean(destroyMethod = "close") //by defaut
+    @Bean(destroyMethod = "close") //by default
     public HttpSolrClient httpSolrClient(@Value("${solr.url}") String solrUrl) {
         return new HttpSolrClient.Builder(solrUrl)
                 .withConnectionTimeout(10000)

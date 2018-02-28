@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @EnableBatchProcessing
 @EnableScheduling
@@ -37,10 +36,11 @@ public class UploaderConfiguration {
 
     //TODO: handle exceptions
     //TODO: fix parallel job running
-    @Scheduled(fixedDelay = 60000)
+    @Scheduled(fixedDelay = 3600000)
     public void uploadEmails() throws Exception {
         logger.debug("Launching jobs...");
         jobLauncher.run(uploadEmailsToElasticsearch, new JobParameters());
         jobLauncher.run(uploadEmailsToSolr, new JobParameters());
+        logger.debug("Jobs was successfully launched");
     }
 }
