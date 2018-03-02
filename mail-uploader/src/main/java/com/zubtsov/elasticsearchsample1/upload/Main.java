@@ -7,6 +7,8 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 //TODO: automate mapping/schema creation
 //TODO: dockerize this application
+//TODO: add REST endpoint
+//TODO: add message listeners
 public class Main {
 
     private static final Logger log = LoggerFactory.getLogger(Main.class);

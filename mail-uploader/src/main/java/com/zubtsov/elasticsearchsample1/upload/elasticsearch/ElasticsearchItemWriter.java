@@ -41,8 +41,9 @@ public class ElasticsearchItemWriter implements ItemStreamWriter<XContentBuilder
 
     }
 
+    //TODO: add ID (From + Sent Date) (use jackson databind to convert email message to String)
     @Override
-    public void write(List<? extends XContentBuilder> items) throws Exception {
+    public void write(List<? extends XContentBuilder> items) {
         BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
 
         for (XContentBuilder item : items) {
@@ -55,6 +56,6 @@ public class ElasticsearchItemWriter implements ItemStreamWriter<XContentBuilder
         //TODO: handle the response
         BulkResponse bulkResponse = bulkRequestBuilder.get();
 
-        logger.debug("{} items has been written successfully to Elasticsearch", items.size());
+        logger.debug("{} items has been successfully written to Elasticsearch", items.size());
     }
 }

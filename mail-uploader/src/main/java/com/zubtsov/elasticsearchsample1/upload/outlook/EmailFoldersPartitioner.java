@@ -10,7 +10,9 @@ import org.springframework.beans.factory.annotation.Value;
 import javax.mail.Folder;
 import javax.mail.MessagingException;
 import javax.mail.Store;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class EmailFoldersPartitioner implements Partitioner {
 

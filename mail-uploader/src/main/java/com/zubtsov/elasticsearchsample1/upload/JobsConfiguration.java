@@ -20,7 +20,6 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.launch.support.SimpleJobLauncher;
 import org.springframework.batch.core.partition.support.Partitioner;
 import org.springframework.batch.core.repository.JobRepository;
@@ -36,6 +35,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
 import javax.mail.*;
+import javax.mail.event.MessageCountListener;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
@@ -83,6 +83,12 @@ public class JobsConfiguration {
         TransportClient client = new PreBuiltTransportClient(Settings.builder().put("cluster.name", clusterName).build());
         client.addTransportAddress(new TransportAddress(InetAddress.getByName(elasticHost), elasticPort));
         return client;
+    }
+
+    //Listeners
+    @Bean
+    public MessageCountListener messageListener() {
+        return new EmailListener();
     }
 
     //Job launcher and jobs

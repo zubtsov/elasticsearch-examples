@@ -1,9 +1,8 @@
 package com.zubtsov.elasticsearchsample1.upload.outlook;
 
+import com.sun.mail.imap.IMAPFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.annotation.AfterChunk;
-import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
@@ -13,7 +12,7 @@ import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Store;
-
+import javax.mail.event.MessageCountListener;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.zubtsov.elasticsearchsample1.upload.outlook.EmailFoldersPartitioner.FOLDER_KEY;
@@ -28,6 +27,9 @@ public class PartitionedOutlookReader implements ItemStreamReader<Message> {
 
     @Autowired
     private Store mailStore;
+
+    @Autowired
+    private MessageCountListener messageListener;
 
     private static final String FOLDER_INDEX_KEY = "folder_index";
     private static final String MESSAGE_INDEX_KEY = "message_index";
@@ -117,7 +119,15 @@ public class PartitionedOutlookReader implements ItemStreamReader<Message> {
             }
         }
 
-        logger.debug("Loaded all messages from {} folders", folders.get().length);
+        //add listeners
+        for (Folder folder : folders.get()) {
+            folder.addMessageCountListener(messageListener);
+            try {
+                ((IMAPFolder) folder).idle();
+            } catch (MessagingException e) {
+                logger.error("Cannot turn on idle mode");
+            }
+        }
     }
 
     @Override
