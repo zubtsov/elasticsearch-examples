@@ -6,7 +6,6 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.batch.core.partition.support.Partitioner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
@@ -25,31 +24,24 @@ public class UploaderConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(UploaderConfiguration.class);
 
     @Autowired
-    private Partitioner partitioner;
+    @Qualifier("imapToElasticPartitionedJob")
+    private Job imapToElastic;
 
     @Autowired
-    @Qualifier("Upload e-mails to Elasticsearch job")
-    private Job uploadEmailsToElasticsearch;
-
-    @Autowired
-    @Qualifier("Upload e-mails to Solr job")
-    private Job uploadEmailsToSolr;
-
-    @Autowired
-    @Qualifier("Partitioned job")
-    private Job partitionedJob;
+    @Qualifier("imapToSolrPartitionedJob")
+    private Job imapToSolr;
 
     @Autowired
     private JobLauncher jobLauncher;
 
     //TODO: handle exceptions
     //TODO: fix parallel job running
-    @Scheduled(fixedDelay = 3600000)
+    //TODO: use job parameters
+    @Scheduled(fixedDelay = 3600000) //TODO: replace to REST API call
     public void uploadEmails() throws Exception {
         logger.debug("Launching jobs...");
-//        jobLauncher.run(uploadEmailsToElasticsearch, new JobParameters());
-//        jobLauncher.run(uploadEmailsToSolr, new JobParameters());
-        jobLauncher.run(partitionedJob, new JobParameters());
+        jobLauncher.run(imapToElastic, new JobParameters());
+//        jobLauncher.run(imapToSolr, new JobParameters());
         logger.debug("Jobs was successfully launched");
     }
 }

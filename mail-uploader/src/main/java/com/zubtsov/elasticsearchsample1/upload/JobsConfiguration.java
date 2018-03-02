@@ -41,7 +41,6 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Properties;
 
-//TODO: check bean scopes
 @Configuration
 @EnableBatchProcessing
 public class JobsConfiguration {
@@ -54,23 +53,8 @@ public class JobsConfiguration {
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
 
-    @Bean
-    @Autowired
-    public Partitioner emailFoldersPartitioner(Store mailStore) {
-        return new EmailFoldersPartitioner(mailStore);
-    }
-
-    @Bean
-    @Autowired
-    public JobLauncher jobLauncher(JobRepository jobRepository) {
-        SimpleJobLauncher jobLauncher = new SimpleJobLauncher();
-        jobLauncher.setTaskExecutor(new SimpleAsyncTaskExecutor()); //TODO: refactor using IOC
-        jobLauncher.setJobRepository(jobRepository);
-        return jobLauncher;
-    }
-
+    //Storages
     @Bean(destroyMethod = "close") //by default
-    @Autowired
     public Store mailStore(@Value("${mail.server.host}") String mailServerHost,
                            @Value("${mail.server.protocol}") String mailServerProtocol,
                            @Value("${mail.user}") String user,
@@ -81,139 +65,6 @@ public class JobsConfiguration {
         Store mailStore = mailSession.getStore(mailServerProtocol);
         mailStore.connect(mailServerHost, user, password);
         return mailStore;
-    }
-
-    @Bean
-    @Qualifier("Partitioned job")
-    public Job partitionedUpload(@Qualifier("Partitioned step") Step partitionedStep) {
-        return jobBuilderFactory.get("Partitioned step")
-                .start(partitionedStep)
-                .build();
-    }
-
-    @Bean
-    @Qualifier("Partitioned step")
-    public Step partitionedStep(@Qualifier("Partitioned outlook reader") ItemReader<Message> partitionedOutlookReader,
-                               @Qualifier("Composite processor") ItemProcessor<Message, XContentBuilder> compositeProcessor,
-                               @Qualifier("Elasticsearch writer") ItemWriter<XContentBuilder> elasticsearchItemWriter,
-                                @Qualifier("Partitioner") Partitioner partitioner) {
-        Step slave = stepBuilderFactory.get("Slave step")
-                .<Message, XContentBuilder>chunk(10)
-                .reader(partitionedOutlookReader)
-                .processor(compositeProcessor)
-                .writer(elasticsearchItemWriter)
-                .build();
-        Step master = stepBuilderFactory.get("Master step")
-                .partitioner("Slave step", partitioner)
-                .gridSize(4)
-                .step(slave)
-                .taskExecutor(new SimpleAsyncTaskExecutor()) //TODO: inject
-                .build();
-        return master;
-    }
-
-
-    @Bean
-    @Qualifier("Upload e-mails to Elasticsearch job")
-    public Job uploadEmailsToElasticsearch(@Qualifier("Upload e-mails to Elasticsearch step") Step retrieveAndStoreEmails) throws Exception {
-        return jobBuilderFactory.get("Upload e-mails to Elasticsearch")
-                .incrementer(new RunIdIncrementer())
-                .start(retrieveAndStoreEmails)
-                .build();
-    }
-
-    @Bean
-    @Qualifier("Upload e-mails to Elasticsearch step")
-    public Step retrieveAndStoreEmailsElasticsearch(@Qualifier("Outlook reader") ItemReader<EmailMessage> outlookItemReader,
-                                                    @Qualifier("Elasticsearch processor") ItemProcessor<EmailMessage, XContentBuilder> processor,
-                                                    @Qualifier("Elasticsearch writer") ItemWriter<XContentBuilder> elasticsearchItemWriter) {
-        return stepBuilderFactory.get("Retrieve e-mail via IMAP and store via Elasticsearch transport client")
-                .<EmailMessage, XContentBuilder>chunk(10)
-                .reader(outlookItemReader)
-                .processor(processor)
-                .writer(elasticsearchItemWriter)
-                .build();
-    }
-
-    @Bean
-    @Qualifier("Upload e-mails to Solr job")
-    public Job uploadEmailsToSolr(@Qualifier("Upload e-mails to Solr step") Step retrieveAndStoreEmails) throws Exception {
-        return jobBuilderFactory.get("Upload e-mails to Solr")
-                .incrementer(new RunIdIncrementer())
-                .start(retrieveAndStoreEmails)
-                .build();
-    }
-
-    @Bean
-    @Qualifier("Upload e-mails to Solr step")
-    public Step retrieveAndStoreEmailsSolr(@Qualifier("Outlook reader") ItemReader<EmailMessage> outlookItemReader,
-                                       @Qualifier("Solr processor") ItemProcessor<EmailMessage, SolrInputDocument> processor,
-                                       @Qualifier("Solr writer") ItemWriter<SolrInputDocument> solrItemWriter) {
-        return stepBuilderFactory.get("Retrieve e-mail via IMAP and store via Solr HTTP client")
-                .<EmailMessage, SolrInputDocument>chunk(10)
-                .reader(outlookItemReader)
-                .processor(processor)
-                .writer(solrItemWriter)
-                .build();
-    }
-
-    @Bean
-    @Qualifier("Partitioner")
-    @Autowired
-    public Partitioner partitioner(Store mailStore) {
-        return new EmailFoldersPartitioner(mailStore);
-    }
-
-    @Bean
-    @Qualifier("Partitioned outlook reader")
-    public PartitionedOutlookReader partitionedOutlookReader() {
-        return new PartitionedOutlookReader();
-    }
-
-    @Bean
-    @Qualifier("Outlook processor")
-    public MessageToEmailMessage outlookProcessor() {
-        return new MessageToEmailMessage();
-    }
-
-    @Bean
-    @Qualifier("Composite processor")
-    public CompositeItemProcessor<Message, XContentBuilder> compositeProcessor(
-            @Qualifier("Outlook processor") ItemProcessor<Message, EmailMessage> outlookProcessor,
-            @Qualifier("Elasticsearch processor") ItemProcessor<EmailMessage, XContentBuilder> elasticProcessor) {
-        CompositeItemProcessor<Message, XContentBuilder> processor = new CompositeItemProcessor<>();
-        processor.setDelegates(Arrays.asList(outlookProcessor, elasticProcessor));
-        return processor;
-    }
-
-    @Bean
-    @Qualifier("Outlook reader")
-    public OutlookItemReader outlookItemReader() {
-        return new OutlookItemReader();
-    }
-
-    @Bean
-    @Qualifier("Elasticsearch processor")
-    public EmailMessageToXContentBuilder elasticsearchItemProcessor() {
-        return new EmailMessageToXContentBuilder();
-    }
-
-    @Bean
-    @Qualifier("Elasticsearch writer")
-    public ElasticsearchItemWriter elasticsearchItemWriter() {
-        return new ElasticsearchItemWriter();
-    }
-
-    @Bean
-    @Qualifier("Solr processor")
-    public EmailMessageToSolrInputDocument solrItemProcessor() {
-        return new EmailMessageToSolrInputDocument();
-    }
-
-    @Bean
-    @Qualifier("Solr writer")
-    public SolrItemWriter solrItemWriter() {
-        return new SolrItemWriter();
     }
 
     @Bean(destroyMethod = "close") //by default
@@ -232,4 +83,124 @@ public class JobsConfiguration {
         client.addTransportAddress(new TransportAddress(InetAddress.getByName(elasticHost), elasticPort));
         return client;
     }
+
+    //Job launcher and jobs
+    @Bean
+    public JobLauncher jobLauncher(JobRepository jobRepository) {
+        SimpleJobLauncher jobLauncher = new SimpleJobLauncher();
+        jobLauncher.setJobRepository(jobRepository);
+        return jobLauncher;
+    }
+
+    @Bean
+    public Job imapToElasticPartitionedJob(@Qualifier("imapToElasticPartitionedStep") Step partitionedStep) {
+        return jobBuilderFactory.get("Partitioned step")
+                .start(partitionedStep)
+                .build();
+    }
+
+    @Bean
+    public Step imapToElasticPartitionedStep(@Qualifier("partitionedOutlookReader") ItemReader<Message> partitionedOutlookReader,
+                               @Qualifier("outlookElasticProcessor") ItemProcessor<Message, XContentBuilder> compositeProcessor,
+                               @Qualifier("elasticsearchWriter") ItemWriter<XContentBuilder> elasticsearchItemWriter,
+                                @Qualifier("imapFoldersPartitioner") Partitioner partitioner) {
+        Step slave = stepBuilderFactory.get("Slave step")
+                .<Message, XContentBuilder>chunk(10)
+                .reader(partitionedOutlookReader)
+                .processor(compositeProcessor)
+                .writer(elasticsearchItemWriter)
+                .build();
+        Step master = stepBuilderFactory.get("Master step")
+                .partitioner("Slave step", partitioner)
+                .gridSize(4)
+                .step(slave) //TODO: inject
+                .taskExecutor(new SimpleAsyncTaskExecutor()) //TODO: inject
+                .build();
+        return master;
+    }
+
+    @Bean
+    public Job imapToSolrPartitionedJob(@Qualifier("imapToSolrPartitionedStep") Step partitionedStep) {
+        return jobBuilderFactory.get("Partitioned step")
+                .start(partitionedStep)
+                .build();
+    }
+
+    @Bean
+    public Step imapToSolrPartitionedStep(@Qualifier("partitionedOutlookReader") ItemReader<Message> reader,
+                                             @Qualifier("outlookSolrProcessor") ItemProcessor<Message, SolrInputDocument> processor,
+                                             @Qualifier("solrWriter") ItemWriter<SolrInputDocument> solrWriter,
+                                             @Qualifier("imapFoldersPartitioner") Partitioner partitioner) {
+        Step slave = stepBuilderFactory.get("Slave step")
+                .<Message, SolrInputDocument>chunk(10)
+                .reader(reader)
+                .processor(processor)
+                .writer(solrWriter)
+                .build();
+        Step master = stepBuilderFactory.get("Master step")
+                .partitioner("Slave step", partitioner)
+                .gridSize(4)
+                .step(slave) //TODO: inject
+                .taskExecutor(new SimpleAsyncTaskExecutor()) //TODO: inject
+                .build();
+        return master;
+    }
+
+    //Partitioners
+    @Bean
+    public Partitioner imapFoldersPartitioner(Store mailStore) {
+        return new EmailFoldersPartitioner(mailStore);
+    }
+
+    //Readers
+    @Bean
+    public PartitionedOutlookReader partitionedOutlookReader() {
+        return new PartitionedOutlookReader();
+    }
+
+    //Processors
+    @Bean
+    public CompositeItemProcessor<Message, XContentBuilder> outlookElasticProcessor(
+            @Qualifier("outlookProcessor") ItemProcessor<Message, EmailMessage> outlookProcessor,
+            @Qualifier("elasticProcessor") ItemProcessor<EmailMessage, XContentBuilder> elasticProcessor) {
+        CompositeItemProcessor<Message, XContentBuilder> processor = new CompositeItemProcessor<>();
+        processor.setDelegates(Arrays.asList(outlookProcessor, elasticProcessor));
+        return processor;
+    }
+
+    @Bean
+    public CompositeItemProcessor<Message, SolrInputDocument> outlookSolrProcessor(
+            @Qualifier("outlookProcessor") ItemProcessor<Message, EmailMessage> outlookProcessor,
+            @Qualifier("solrProcessor") ItemProcessor<EmailMessage, SolrInputDocument> solrProcessor) {
+        CompositeItemProcessor<Message, SolrInputDocument> processor = new CompositeItemProcessor<>();
+        processor.setDelegates(Arrays.asList(outlookProcessor, solrProcessor));
+        return processor;
+    }
+
+    @Bean
+    public MessageToEmailMessage outlookProcessor() {
+        return new MessageToEmailMessage();
+    }
+
+    @Bean
+    public EmailMessageToXContentBuilder elasticProcessor() {
+        return new EmailMessageToXContentBuilder();
+    }
+
+    @Bean
+    public EmailMessageToSolrInputDocument solrProcessor() {
+        return new EmailMessageToSolrInputDocument();
+    }
+
+    //Writers
+    @Bean
+    public ElasticsearchItemWriter elasticsearchWriter() {
+        return new ElasticsearchItemWriter();
+    }
+
+    @Bean
+    public SolrItemWriter solrWriter() {
+        return new SolrItemWriter();
+    }
+
 }

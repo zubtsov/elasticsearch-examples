@@ -14,12 +14,17 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Store;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static com.zubtsov.elasticsearchsample1.upload.outlook.EmailFoldersPartitioner.FOLDER_KEY;
 
 //TODO: we suppose that messages won't be deleted
+//TODO: add common counter for all messages
 public class PartitionedOutlookReader implements ItemStreamReader<Message> {
 
     private static final Logger logger = LoggerFactory.getLogger(PartitionedOutlookReader.class);
+
+    private static final AtomicInteger totalMessages = new AtomicInteger(0);
 
     @Autowired
     private Store mailStore;
@@ -27,8 +32,10 @@ public class PartitionedOutlookReader implements ItemStreamReader<Message> {
     private static final String FOLDER_INDEX_KEY = "folder_index";
     private static final String MESSAGE_INDEX_KEY = "message_index";
 
+    //TODO: refactor!
     private ThreadLocal<String[]> folderNames = new ThreadLocal<>();
-    private ThreadLocal<Folder[]> folders = new ThreadLocal<>();
+    private ThreadLocal<Folder[]> folders = new ThreadLocal<>(); //parallel to folderNames
+
     private ThreadLocal<Message[][]> messages = new ThreadLocal<>();
 
     private ThreadLocal<Integer> currentFolderIndex = new ThreadLocal<>();
@@ -36,7 +43,7 @@ public class PartitionedOutlookReader implements ItemStreamReader<Message> {
 
     @Override
     public Message read() {
-        if (currentFolderIndex.get() == folders.get().length) { //TODO: maybe equals()?
+        if (currentFolderIndex.get() == folders.get().length) { //TODO: maybe use equals()?
             return null;
         }
 
@@ -49,8 +56,9 @@ public class PartitionedOutlookReader implements ItemStreamReader<Message> {
             }
         }
 
-        currentMessageIndex.set(currentMessageIndex.get()+1);
-        return messages.get()[currentFolderIndex.get()][currentMessageIndex.get()-1];
+        totalMessages.incrementAndGet();
+        currentMessageIndex.set(currentMessageIndex.get() + 1);
+        return messages.get()[currentFolderIndex.get()][currentMessageIndex.get() - 1];
     }
 
     @Override
@@ -71,25 +79,29 @@ public class PartitionedOutlookReader implements ItemStreamReader<Message> {
 
         folders.set(new Folder[folderNames.get().length]);
 
-        for (int i = 0; i<folderNames.get().length; i++) {
+        for (int i = 0; i < folderNames.get().length; i++) {
+            String folderName = folderNames.get()[i];
             try {
-                folders.get()[i] = mailStore.getFolder(folderNames.get()[i]);
+                folders.get()[i] = mailStore.getFolder(folderName);
             } catch (MessagingException e) {
-                logger.error("Error occured while getting folder", e); //TODO: add folder name
+                logger.error("Error occured while getting folder", folderName);
+                logger.error("", e);
             }
         }
 
-        for (Folder folder : folders.get()) {
+        for (int i = 0; i < folders.get().length; i++) {
+            Folder folder = folders.get()[i];
             try {
                 if (!folder.isOpen()) {
                     folder.open(Folder.READ_ONLY);
                 }
             } catch (MessagingException e) {
-                logger.error("Error occured while opening folder", e); //TODO: add folder name
+                logger.error("Error occured while opening folder {}", folderNames.get()[i]);
+                logger.error("", e);
             }
         }
 
-        logger.debug("Partitioned reader {} opened {} folders", this, folders.get().length);
+        logger.debug("Successfully opened {} folders", folders.get().length);
 
         messages.set(new Message[folders.get().length][]);
 
@@ -97,11 +109,12 @@ public class PartitionedOutlookReader implements ItemStreamReader<Message> {
             try {
                 messages.get()[i] = folders.get()[i].getMessages();
             } catch (MessagingException e) {
-                logger.error("Error occured while getting messages for folder", e); //TODO: add folder name
+                logger.error("Error occured while getting messages for folder {}", folderNames.get()[i]);
+                logger.error("", e);
             }
         }
 
-        logger.debug("Partitioned reader {} got all messages from {} folders", this, folders.get().length);
+        logger.debug("Loaded all messages from {} folders", folders.get().length);
     }
 
     @Override
@@ -112,19 +125,17 @@ public class PartitionedOutlookReader implements ItemStreamReader<Message> {
 
     @Override
     public void close() throws ItemStreamException {
-        for (Folder folder : folders.get()) {
+        logger.debug("Closing reader. Total messages: {}", totalMessages.get());
+        for (int i = 0; i < folders.get().length; i++) {
+            Folder folder = folders.get()[i];
             try {
                 folder.close();
             } catch (MessagingException e) {
-                logger.error("Error occured while closing folder", e); //TODO: add folder name
+                logger.error("Error occured while closing folder {}", folderNames.get()[i]);
+                logger.error("", e);
             }
         }
 
-        logger.debug("Partitioned reader {} closed {} folders", this, folders.get().length);
-    }
-
-    @AfterChunk
-    private void afterChunk(ChunkContext chunkContext) {
-        logger.debug("Partitioned reader {} successfully readed chunk: {}", this, chunkContext);
+        logger.debug("Successfully closed {} folders", this, folders.get().length);
     }
 }
