@@ -16,7 +16,7 @@ import java.util.List;
 //TODO: make it restartable
 public class SolrItemWriter implements ItemStreamWriter<SolrInputDocument> {
 
-    public static final Logger logger = LoggerFactory.getLogger(SolrItemWriter.class);
+    private static final Logger logger = LoggerFactory.getLogger(SolrItemWriter.class);
 
     @Value("${solr.collection.name}")
     private String collectionName;

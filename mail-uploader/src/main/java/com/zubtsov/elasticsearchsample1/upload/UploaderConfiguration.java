@@ -6,6 +6,7 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.partition.support.Partitioner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +22,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 @PropertySource("application.properties")
 public class UploaderConfiguration {
 
-    public static final Logger logger = LoggerFactory.getLogger(UploaderConfiguration.class);
+    private static final Logger logger = LoggerFactory.getLogger(UploaderConfiguration.class);
+
+    @Autowired
+    private Partitioner partitioner;
 
     @Autowired
     @Qualifier("Upload e-mails to Elasticsearch job")
@@ -32,6 +36,10 @@ public class UploaderConfiguration {
     private Job uploadEmailsToSolr;
 
     @Autowired
+    @Qualifier("Partitioned job")
+    private Job partitionedJob;
+
+    @Autowired
     private JobLauncher jobLauncher;
 
     //TODO: handle exceptions
@@ -39,8 +47,9 @@ public class UploaderConfiguration {
     @Scheduled(fixedDelay = 3600000)
     public void uploadEmails() throws Exception {
         logger.debug("Launching jobs...");
-        jobLauncher.run(uploadEmailsToElasticsearch, new JobParameters());
-        jobLauncher.run(uploadEmailsToSolr, new JobParameters());
+//        jobLauncher.run(uploadEmailsToElasticsearch, new JobParameters());
+//        jobLauncher.run(uploadEmailsToSolr, new JobParameters());
+        jobLauncher.run(partitionedJob, new JobParameters());
         logger.debug("Jobs was successfully launched");
     }
 }

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.annotation.AfterChunk;
 import org.springframework.batch.item.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import javax.mail.*;
@@ -19,7 +20,7 @@ import java.util.TreeMap;
 //TODO: implement as Producer-Consumer using stack/queue?
 public class OutlookItemReader implements ItemStreamReader<EmailMessage> {
 
-    public static final Logger logger = LoggerFactory.getLogger(OutlookItemReader.class);
+    private static final Logger logger = LoggerFactory.getLogger(OutlookItemReader.class);
 
     private static final String CURRENT_INDEX = "current.index";
     private static final String CURRENT_FOLDER_NAME = "current.folder.name";
@@ -29,15 +30,8 @@ public class OutlookItemReader implements ItemStreamReader<EmailMessage> {
 
     private @Value("${mail.folder.name.pattern}")
     String folderNamePattern;
-    private @Value("${mail.server.host}")
-    String mailServerHost;
-    private @Value("${mail.server.protocol}")
-    String mailServerProtocol;
-    private @Value("${mail.user}")
-    String user;
-    private @Value("${mail.password}")
-    String password;
 
+    @Autowired
     private Store mailStore;
 
     private TreeMap<String, Message[]> foldersMessages = new TreeMap<>();
@@ -46,12 +40,6 @@ public class OutlookItemReader implements ItemStreamReader<EmailMessage> {
     public void open(ExecutionContext executionContext) throws ItemStreamException {
         logger.debug("Opening reader...");
         try {
-            Properties props = new Properties();
-            props.setProperty("mail.imap.ssl.enable", "true");
-            Session mailSession = Session.getInstance(props);
-            mailStore = mailSession.getStore(mailServerProtocol);
-            mailStore.connect(mailServerHost, user, password);
-
             for (Folder folder : mailStore.getDefaultFolder().list(folderNamePattern)) {
                 if (folder.getMessageCount() != 0) { //TODO: refactor
                     folder.open(Folder.READ_ONLY);

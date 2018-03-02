@@ -17,7 +17,7 @@ import java.util.List;
 //TODO: refactor & make writer restartable (bulk operations may partially fail)
 public class ElasticsearchItemWriter implements ItemStreamWriter<XContentBuilder> {
 
-    public static final Logger logger = LoggerFactory.getLogger(ElasticsearchItemWriter.class);
+    private static final Logger logger = LoggerFactory.getLogger(ElasticsearchItemWriter.class);
 
     @Autowired
     private TransportClient client;
