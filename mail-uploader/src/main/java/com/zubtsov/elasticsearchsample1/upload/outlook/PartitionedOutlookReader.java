@@ -136,6 +136,6 @@ public class PartitionedOutlookReader implements ItemStreamReader<Message> {
             }
         }
 
-        logger.debug("Successfully closed {} folders", this, folders.get().length);
+        logger.debug("Successfully closed {} folders", folders.get().length);
     }
 }

@@ -6,6 +6,7 @@ import javax.mail.*;
 import java.io.IOException;
 import java.util.Arrays;
 
+//TODO: refactor + use MapStruct
 public class MessageToEmailMessage implements ItemProcessor <Message, EmailMessage> {
     @Override
     public EmailMessage process(Message message) throws Exception {
@@ -13,12 +14,26 @@ public class MessageToEmailMessage implements ItemProcessor <Message, EmailMessa
 
         EmailMessage emailMessage = new EmailMessage();
         emailMessage.setFolder(message.getFolder().getName());
-        emailMessage.setFrom(Arrays.stream(message.getFrom()).map(Address::toString).toArray(String[]::new));
+
+        Address[] from = message.getFrom();
+        if (from != null) {
+            emailMessage.setFrom(Arrays.stream(from).map(Address::toString).toArray(String[]::new));
+        }
+
         emailMessage.setSubject(message.getSubject());
         emailMessage.setSentDate(message.getSentDate());
         emailMessage.setReceivedDate(message.getReceivedDate());
-        emailMessage.setRecipients(Arrays.stream(message.getAllRecipients()).map(Address::toString).toArray(String[]::new)); //TODO: fix NPE
-        emailMessage.setReplyTo(Arrays.stream(message.getReplyTo()).map(Address::toString).toArray(String[]::new));
+
+        Address[] recipients = message.getAllRecipients();
+        if (recipients != null) {
+            emailMessage.setRecipients(Arrays.stream(recipients).map(Address::toString).toArray(String[]::new));
+        }
+
+        Address[] replyTo = message.getReplyTo();
+        if (replyTo != null) {
+            emailMessage.setReplyTo(Arrays.stream(replyTo).map(Address::toString).toArray(String[]::new));
+        }
+
         emailMessage.setContent(messageContentToString(content));
         return emailMessage;
     }

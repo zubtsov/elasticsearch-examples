@@ -7,8 +7,9 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.annotation.AfterWrite;
-import org.springframework.batch.item.*;
+import org.springframework.batch.item.ExecutionContext;
+import org.springframework.batch.item.ItemStreamException;
+import org.springframework.batch.item.ItemStreamWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -53,10 +54,7 @@ public class ElasticsearchItemWriter implements ItemStreamWriter<XContentBuilder
 
         //TODO: handle the response
         BulkResponse bulkResponse = bulkRequestBuilder.get();
-    }
 
-    @AfterWrite
-    private void afterWrite() {
-        logger.debug("Items has been written successfully to Elasticsearch");
+        logger.debug("{} items has been written successfully to Elasticsearch", items.size());
     }
 }

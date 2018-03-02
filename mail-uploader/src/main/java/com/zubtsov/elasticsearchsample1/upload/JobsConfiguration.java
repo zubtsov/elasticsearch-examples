@@ -61,6 +61,7 @@ public class JobsConfiguration {
                            @Value("${mail.password}") String password) throws NoSuchProviderException, MessagingException {
         Properties props = new Properties();
         props.setProperty("mail.imap.ssl.enable", "true");
+        props.setProperty("mail.imap.connectionpoolsize", "10"); //TODO: unhardcode
         Session mailSession = Session.getInstance(props);
         Store mailStore = mailSession.getStore(mailServerProtocol);
         mailStore.connect(mailServerHost, user, password);
