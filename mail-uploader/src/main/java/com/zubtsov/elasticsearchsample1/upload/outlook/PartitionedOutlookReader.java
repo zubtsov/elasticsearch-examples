@@ -106,10 +106,13 @@ public class PartitionedOutlookReader implements ItemStreamReader<Message> {
         messages.set(new Message[folders.get().length][]);
 
         for (int i = 0; i < folders.get().length; i++) {
+            String folderName = folderNames.get()[i];
             try {
-                messages.get()[i] = folders.get()[i].getMessages();
+                Message[] messagesForFolder = folders.get()[i].getMessages();
+                messages.get()[i] = messagesForFolder;
+                logger.debug("Loaded {} messages from folder {}", messagesForFolder.length, folderName);
             } catch (MessagingException e) {
-                logger.error("Error occured while getting messages for folder {}", folderNames.get()[i]);
+                logger.error("Error occured while getting messages for folder {}", folderName);
                 logger.error("", e);
             }
         }
